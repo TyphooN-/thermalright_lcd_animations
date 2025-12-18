@@ -1225,13 +1225,14 @@ class Confetti(Animation):
 
     def update(self):
         # Fade existing confetti
-        for led_idx, (color, life) in list(self.confetti):
+        new_confetti = []
+        for led_idx, (color, life) in self.confetti:
             life -= 1
             if life <= 0:
-                self.confetti.remove((led_idx, (color, life)))
                 self.lcd.set_led(led_idx, 0)
             else:
-                self.confetti[self.confetti.index((led_idx, (color, life + 1)))] = (led_idx, (color, life))
+                new_confetti.append((led_idx, (color, life)))
+        self.confetti = new_confetti
 
         # Add new confetti bursts
         if random.random() < 0.3:
