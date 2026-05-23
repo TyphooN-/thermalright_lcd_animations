@@ -1,84 +1,78 @@
 # Quick Start Guide
 
-## 1. Install Dependencies
+## 1. Prerequisites
+
+A Rust toolchain (1.70+). Get one from [rustup.rs](https://rustup.rs/):
+
+```bash
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
+
+## 2. Build
 
 ```bash
 cd thermalright_lcd_animations
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+cargo build --release
 ```
 
-## 2. Test Without Installing
+The binary is at `./target/release/thermalright-lcd`.
+
+## 3. Run (no install needed)
 
 ```bash
+# Interactive TUI — pick animations with arrow keys, space for random, q to quit
+./target/release/thermalright-lcd
+
 # List all available animations
-python src/animations.py --list
+./target/release/thermalright-lcd --list
 
-# Run auto-rotate demo (cycles through all animations)
-python src/animations.py
+# Run one animation continuously
+./target/release/thermalright-lcd --animation rainbow_wave_ltr
 
-# Run a specific animation
-python src/animations.py --animation rainbow_wave_ltr
-
-# Custom timing
-python src/animations.py --duration 5 --interval 0.03
+# Faster timing
+./target/release/thermalright-lcd --duration 5 --interval 0.01
 ```
 
-## 3. Install (Optional)
+## 4. Install (optional)
 
-Sets up udev rules and optionally creates a systemd service:
+Adds a udev rule so the device is accessible without root, plus an optional systemd unit:
 
 ```bash
 sudo ./install.sh
 ```
 
-## Animation List
-
-- **rainbow_wave_ltr** - Rainbow wave moving left to right
-- **rainbow_wave_rtl** - Rainbow wave moving right to left
-- **dual_wave** - Dual rainbow waves on CPU and GPU sides
-- **ocean_wave** - Ocean-themed wave animation
-- **fire_wave** - Fire-themed wave animation
-- **knight_rider** - Knight Rider / K.I.T.T. scanner effect
-- **cylon_eye** - Cylon eye scanner (both sides)
-- **larson_scanner_dual** - Dual Larson scanners on CPU and GPU
-- **chasing_lights** - Chasing lights effect
-- **theater_chase** - Theater marquee chase effect
-- **police_strobe** - Police strobe light effect
-- **checkerboard** - Checkerboard pattern
-- **alternating_bars** - Alternating color bars
-- **color_breathing** - Smooth breathing effect with color cycle
-- **rainbow_cycle** - Rainbow color cycle all LEDs same color
-- **sparkle** - Random sparkle/twinkle effect
-- **random_burst** - Random color bursts
-- **gradient_sweep** - Gradient sweep across display
-- **plasma** - Plasma effect
-- **matrix_rain** - Matrix-style rain effect
-- **binary_counter** - Binary counter animation
-- **segment_crawl** - Crawl through display segments
-- **loading_bar** - Loading bar animation
-- **color_wipe** - Color wipe effect
-- **rainbow_segments** - Each segment region gets different rainbow color
-
 ## Troubleshooting
 
-### Permission Denied
-If you get permission errors accessing the USB device:
+### Permission denied opening the device
+
 ```bash
-sudo ./install.sh  # Installs udev rules
-# Then log out and back in
+sudo ./install.sh    # installs the udev rule
+# unplug and replug the USB cable, or reboot
 ```
 
-### Device Not Found
-- Make sure the LCD is connected via USB
-- Check vendor/product IDs in config.json match your device
-- Try running `lsusb` to verify the device is detected
+### Device not found
+
+- Verify the cooler's LCD cable is plugged in.
+- Check `lsusb` shows `0416:8001` (Winbond — Thermalright uses Winbond's HID transfer block).
+- If your device has a different VID/PID, set them in `config.json` or pass them as `--vendor`/`--product` flags after editing the source.
+
+### Build error: `hidapi` couldn't link
+
+Install the system `hidapi`/`libudev` development headers (Debian/Ubuntu: `sudo apt install libudev-dev pkg-config`).
 
 ## Configuration
 
-Edit `config.json` to customize:
-- Which animations to include in rotation
-- Rotation duration per animation
-- Update interval (animation speed)
-- USB vendor/product IDs
+`config.json` (optional):
+
+```json
+{
+  "vendor_id": "0x0416",
+  "product_id": "0x8001",
+  "animation_mode": "interactive",
+  "update_interval": 0.015,
+  "rotation_duration": 10.0,
+  "animations": ["rainbow_cycle", "aurora", "game_of_life"]
+}
+```
+
+CLI flags always win over config values.
