@@ -609,7 +609,11 @@ impl Animation for PredatorPrey {
                 let green = (p / m).clamp(0.0, 1.0);
                 lcd.set_color(
                     i,
-                    [(red * 255.0) as u8, (green * 255.0) as u8, ((red + green) * 40.0) as u8],
+                    [
+                        (red * 255.0) as u8,
+                        (green * 255.0) as u8,
+                        ((red + green) * 40.0) as u8,
+                    ],
                 );
             } else {
                 lcd.set_color(i, [0, 0, 0]);
@@ -617,5 +621,276 @@ impl Animation for PredatorPrey {
         }
         let _ = PI;
         self.frame = self.frame.wrapping_add(1);
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Aesthetic additions: slower, smoother, less arcade-y than the legacy utility effects
+// ---------------------------------------------------------------------------
+
+#[derive(Default)]
+pub struct NebulaDrift {
+    frame: u32,
+}
+
+impl Animation for NebulaDrift {
+    fn update(&mut self, lcd: &mut LcdController) {
+        lcd.set_all_leds(true);
+        let t = self.frame as f32 * 0.018;
+        for i in 0..NUMBER_OF_LEDS {
+            let x = i as f32 / NUMBER_OF_LEDS as f32;
+            let a = (x * TAU * 1.7 + t).sin();
+            let b = (x * TAU * 4.3 - t * 0.73).sin();
+            let c = (x * TAU * 8.1 + t * 0.37).sin();
+            let v = ((a * 0.55 + b * 0.30 + c * 0.15) + 1.0) * 0.5;
+            let hue = (245.0 + v * 95.0 + (t * 12.0).sin() * 12.0).rem_euclid(360.0);
+            let sat = 0.55 + v * 0.35;
+            let brightness = 0.10 + v.powf(1.6) * 0.85;
+            lcd.set_color(i, color::hsv(hue, sat, brightness));
+        }
+        self.frame = self.frame.wrapping_add(1);
+    }
+
+    fn preferred_duration(&self) -> f32 {
+        18.0
+    }
+}
+
+#[derive(Default)]
+pub struct PrismBloom {
+    frame: u32,
+}
+
+impl Animation for PrismBloom {
+    fn update(&mut self, lcd: &mut LcdController) {
+        lcd.set_all_leds(true);
+        let t = self.frame as f32 * 0.028;
+        let centers = [
+            15.0 + (t * 0.7).sin() * 6.0,
+            42.0 + (t * 0.43).cos() * 12.0,
+            69.0 + (t * 0.61).sin() * 7.0,
+        ];
+        for i in 0..NUMBER_OF_LEDS {
+            let x = i as f32;
+            let mut glow = 0.0_f32;
+            let mut hue = 0.0_f32;
+            for (j, center) in centers.iter().enumerate() {
+                let d = (x - *center).abs();
+                let w = (-(d * d) / 120.0).exp();
+                glow += w;
+                hue += w * (j as f32 * 120.0 + t * 28.0);
+            }
+            let h = if glow > 0.001 { hue / glow } else { t * 20.0 };
+            let b = (0.08 + glow * 0.72).clamp(0.08, 1.0);
+            lcd.set_color(i, color::hsv(h.rem_euclid(360.0), 0.78, b));
+        }
+        self.frame = self.frame.wrapping_add(1);
+    }
+
+    fn preferred_duration(&self) -> f32 {
+        16.0
+    }
+}
+
+struct Ember {
+    pos: f32,
+    vel: f32,
+    life: f32,
+    hue: f32,
+}
+
+#[derive(Default)]
+pub struct EmberDrift {
+    frame: u32,
+    embers: Vec<Ember>,
+}
+
+impl Animation for EmberDrift {
+    fn update(&mut self, lcd: &mut LcdController) {
+        lcd.set_all_leds(true);
+        let mut rng = rand::thread_rng();
+        let t = self.frame as f32 * 0.025;
+        for i in 0..NUMBER_OF_LEDS {
+            let x = i as f32;
+            let smoke = ((x * 0.13 + t).sin() * 0.5 + 0.5) * 0.08;
+            lcd.set_color(i, color::hsv(22.0 + smoke * 80.0, 0.85, 0.03 + smoke));
+        }
+        if rng.gen::<f32>() < 0.22 {
+            self.embers.push(Ember {
+                pos: rng.gen_range(0.0..NUMBER_OF_LEDS as f32),
+                vel: rng.gen_range(-0.42..0.42),
+                life: rng.gen_range(45.0..95.0),
+                hue: rng.gen_range(18.0..46.0),
+            });
+        }
+        self.embers.retain_mut(|e| {
+            e.pos += e.vel + (t + e.pos * 0.05).sin() * 0.04;
+            e.life -= 1.0;
+            if e.life <= 0.0 || e.pos < -4.0 || e.pos > NUMBER_OF_LEDS as f32 + 4.0 {
+                return false;
+            }
+            let center = e.pos as i32;
+            for off in -2..=2 {
+                let idx = center + off;
+                if (0..NUMBER_OF_LEDS as i32).contains(&idx) {
+                    let falloff = 1.0 - off.abs() as f32 / 3.0;
+                    let b = (e.life / 95.0).clamp(0.0, 1.0) * falloff;
+                    if b > 0.04 {
+                        lcd.set_led(idx as usize, true);
+                        lcd.set_color(idx as usize, color::hsv(e.hue, 0.95, b));
+                    }
+                }
+            }
+            true
+        });
+        self.frame = self.frame.wrapping_add(1);
+    }
+
+    fn preferred_duration(&self) -> f32 {
+        16.0
+    }
+}
+
+#[derive(Default)]
+pub struct IceCrystals {
+    frame: u32,
+}
+
+impl Animation for IceCrystals {
+    fn update(&mut self, lcd: &mut LcdController) {
+        lcd.set_all_leds(true);
+        let t = self.frame as f32 * 0.035;
+        for i in 0..NUMBER_OF_LEDS {
+            let x = i as f32;
+            let facet = ((x * 0.47).sin() + (x * 0.19 + 1.7).cos()) * 0.5;
+            let shimmer = ((x * 1.71 + t * 3.1).sin() * 0.5 + 0.5).powf(9.0);
+            let slow = ((x * 0.08 - t).sin() * 0.5 + 0.5) * 0.45;
+            let b = (0.18 + slow + shimmer * 0.45).clamp(0.10, 1.0);
+            let hue = 184.0 + facet * 24.0 + shimmer * 20.0;
+            lcd.set_color(i, color::hsv(hue, 0.35 + shimmer * 0.25, b));
+        }
+        self.frame = self.frame.wrapping_add(1);
+    }
+
+    fn preferred_duration(&self) -> f32 {
+        14.0
+    }
+}
+
+#[derive(Default)]
+pub struct SolarFlare {
+    frame: u32,
+}
+
+impl Animation for SolarFlare {
+    fn update(&mut self, lcd: &mut LcdController) {
+        lcd.set_all_leds(true);
+        let t = self.frame as f32 * 0.045;
+        let suns = [23.0 + (t * 0.37).sin() * 5.0, 61.0 + (t * 0.29).cos() * 5.0];
+        for i in 0..NUMBER_OF_LEDS {
+            let x = i as f32;
+            let mut heat = 0.03_f32;
+            for sun in suns {
+                let d = (x - sun).abs();
+                heat += (1.0 / (1.0 + d * 0.19)).powf(1.7);
+                heat += ((d * 0.55 - t * 3.0).sin().max(0.0)).powf(5.0) * 0.24;
+            }
+            let b = heat.clamp(0.05, 1.0);
+            let hue = (8.0 + b * 44.0 + (x * 0.13 + t).sin() * 5.0).clamp(0.0, 58.0);
+            lcd.set_color(i, color::hsv(hue, 0.95, b));
+        }
+        self.frame = self.frame.wrapping_add(1);
+    }
+
+    fn preferred_duration(&self) -> f32 {
+        13.0
+    }
+}
+
+#[derive(Default)]
+pub struct MoonlitTide {
+    frame: u32,
+}
+
+impl Animation for MoonlitTide {
+    fn update(&mut self, lcd: &mut LcdController) {
+        lcd.set_all_leds(true);
+        let t = self.frame as f32 * 0.04;
+        for i in 0..NUMBER_OF_LEDS {
+            let x = i as f32;
+            let tide = ((x * 0.22 - t).sin() + (x * 0.07 + t * 0.43).sin()) * 0.5;
+            let foam = ((x * 0.9 - t * 3.0).sin() * 0.5 + 0.5).powf(12.0);
+            let b = (0.13 + (tide + 1.0) * 0.22 + foam * 0.5).clamp(0.08, 1.0);
+            let sat = (0.65 - foam * 0.45).clamp(0.18, 0.75);
+            let hue = 205.0 + tide * 18.0;
+            lcd.set_color(i, color::hsv(hue, sat, b));
+        }
+        self.frame = self.frame.wrapping_add(1);
+    }
+
+    fn preferred_duration(&self) -> f32 {
+        15.0
+    }
+}
+
+#[derive(Default)]
+pub struct CyberPulse {
+    frame: u32,
+}
+
+impl Animation for CyberPulse {
+    fn update(&mut self, lcd: &mut LcdController) {
+        lcd.set_all_leds(true);
+        let t = self.frame as f32 * 0.08;
+        for i in 0..NUMBER_OF_LEDS {
+            let x = i as f32;
+            let grid = if (i + (self.frame as usize / 12)) % 7 == 0 {
+                0.18
+            } else {
+                0.03
+            };
+            let pulse_a =
+                (1.0 - ((x - (t * 8.0).rem_euclid(NUMBER_OF_LEDS as f32)).abs() / 10.0)).max(0.0);
+            let pulse_b = (1.0
+                - ((x - (NUMBER_OF_LEDS as f32 - (t * 5.0).rem_euclid(NUMBER_OF_LEDS as f32)))
+                    .abs()
+                    / 13.0))
+                .max(0.0);
+            let pulse = pulse_a.powf(2.5) + pulse_b.powf(2.0);
+            let hue = if pulse_a > pulse_b { 178.0 } else { 282.0 };
+            let b = (grid + pulse * 0.85).clamp(0.03, 1.0);
+            lcd.set_color(i, color::hsv(hue, 0.86, b));
+        }
+        self.frame = self.frame.wrapping_add(1);
+    }
+
+    fn preferred_duration(&self) -> f32 {
+        11.0
+    }
+}
+
+#[derive(Default)]
+pub struct JewelBox {
+    frame: u32,
+}
+
+impl Animation for JewelBox {
+    fn update(&mut self, lcd: &mut LcdController) {
+        lcd.set_all_leds(true);
+        let t = self.frame as f32 * 0.033;
+        let hues = [152.0, 204.0, 268.0, 318.0, 36.0];
+        for i in 0..NUMBER_OF_LEDS {
+            let facet =
+                ((i as f32 * 0.37 + t).sin() + (i as f32 * 1.13 - t * 0.8).cos()) * 0.5 + 1.0;
+            let idx = ((i / 5) + (self.frame as usize / 45)) % hues.len();
+            let sparkle = ((i as f32 * 2.41 + t * 5.0).sin() * 0.5 + 0.5).powf(18.0);
+            let b = (0.09 + facet * 0.19 + sparkle * 0.65).clamp(0.08, 1.0);
+            lcd.set_color(i, color::hsv(hues[idx] + facet * 8.0, 0.82, b));
+        }
+        self.frame = self.frame.wrapping_add(1);
+    }
+
+    fn preferred_duration(&self) -> f32 {
+        14.0
     }
 }

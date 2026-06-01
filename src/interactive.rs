@@ -42,6 +42,7 @@ impl InteractiveController {
         let entry = &self.entries[self.current_index];
         let mut anim = (entry.factory)();
         anim.reset(&mut self.lcd);
+        self.duration = anim.preferred_duration();
         self.current_anim = Some(anim);
         self.start_time = Instant::now();
         let _ = self.draw_ui();
@@ -90,9 +91,18 @@ impl InteractiveController {
         let mut out = stdout();
         let entry = &self.entries[self.current_index];
         queue!(out, Clear(ClearType::All), MoveTo(0, 0))?;
-        queue!(out, Print("======================================================================\r\n"))?;
-        queue!(out, Print(" THERMALRIGHT LCD ANIMATIONS - Interactive Mode (Rust)\r\n"))?;
-        queue!(out, Print("======================================================================\r\n"))?;
+        queue!(
+            out,
+            Print("======================================================================\r\n")
+        )?;
+        queue!(
+            out,
+            Print(" THERMALRIGHT LCD ANIMATIONS - Interactive Mode (Rust)\r\n")
+        )?;
+        queue!(
+            out,
+            Print("======================================================================\r\n")
+        )?;
         queue!(out, Print("\r\n"))?;
         queue!(
             out,
@@ -111,21 +121,39 @@ impl InteractiveController {
                 if self.random_mode { "RANDOM" } else { "MANUAL" }
             ))
         )?;
-        queue!(out, Print(format!(" Duration: {:.1}s\r\n", self.duration)))?;
         queue!(
             out,
-            Print(format!(" Speed (interval): {:.3}s\r\n", self.update_interval))
+            Print(format!(
+                " Dwell: {:.1}s (animation recommended)\r\n",
+                self.duration
+            ))
+        )?;
+        queue!(
+            out,
+            Print(format!(
+                " Speed (interval): {:.3}s\r\n",
+                self.update_interval
+            ))
         )?;
         queue!(out, Print("\r\n"))?;
-        queue!(out, Print("----------------------------------------------------------------------\r\n"))?;
+        queue!(
+            out,
+            Print("----------------------------------------------------------------------\r\n")
+        )?;
         queue!(out, Print(" Controls:\r\n"))?;
         queue!(out, Print("   <- ->  : Previous/Next animation\r\n"))?;
         queue!(out, Print("   SPACE  : Jump to random animation\r\n"))?;
         queue!(out, Print("   m      : Toggle Manual/Random mode\r\n"))?;
-        queue!(out, Print("   + -    : Increase/Decrease duration (+/- 1s)\r\n"))?;
+        queue!(
+            out,
+            Print("   + -    : Increase/Decrease duration (+/- 1s)\r\n")
+        )?;
         queue!(out, Print("   [ ]    : Decrease/Increase speed\r\n"))?;
         queue!(out, Print("   q      : Quit\r\n"))?;
-        queue!(out, Print("----------------------------------------------------------------------\r\n"))?;
+        queue!(
+            out,
+            Print("----------------------------------------------------------------------\r\n")
+        )?;
         out.flush()
     }
 
@@ -156,7 +184,9 @@ impl InteractiveController {
                 if let Event::Key(key) = event::read()? {
                     match key.code {
                         KeyCode::Char('q') | KeyCode::Char('Q') => break,
-                        KeyCode::Char('c') if key.modifiers.contains(KeyModifiers::CONTROL) => break,
+                        KeyCode::Char('c') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                            break
+                        }
                         KeyCode::Right => self.next(),
                         KeyCode::Left => self.prev(),
                         KeyCode::Char(' ') => self.random(),

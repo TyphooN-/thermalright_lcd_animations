@@ -1,143 +1,167 @@
-# Animation Catalog — 80 Animations
+# Animation Catalog — 79 Curated Animations
 
-68 ported from the original Python implementation plus 12 new Rust-only additions, organized by category.
+The catalog was tightened for aesthetics: harsh utility/status effects were removed from the public rotation set, several legacy effects were softened, and eight cinematic ambient animations were added.
 
-## Waves (5)
+## Retired from the public catalog
 
-1. **rainbow_wave_ltr** — Rainbow wave moving left to right
-2. **rainbow_wave_rtl** — Rainbow wave moving right to left
-3. **dual_wave** — Dual rainbow waves on CPU and GPU sides
-4. **ocean_wave** — Ocean-themed wave with blue/cyan colors
-5. **fire_wave** — Flickering fire wave with red/orange/yellow
+These were technically functional but not good-looking enough for daily rotation on the LCD: `police_strobe`, `emergency_strobe`, `morse_sos`, `strobe_multicolor`, `binary_counter`, `loading_bar`, `boot_sequence`, `traffic_light`, and `disco`.
 
-## Scanners & chase (6)
+## Added cinematic ambient set
 
-6. **knight_rider** — Classic K.I.T.T. scanner (red bouncing)
-7. **cylon_eye** — Battlestar Galactica scanner (both sides)
-8. **larson_scanner_dual** — Dual colored scanners (cyan/magenta)
-9. **chasing_lights** — Multi-color chase sequence
-10. **theater_chase** — Marquee theater chase
-11. **lighthouse** — Rotating lighthouse beacon
+1. **nebula_drift** — slow purple/blue nebula clouds; long dwell recommended.
+2. **prism_bloom** — soft overlapping RGB blooms instead of hard flashes.
+3. **ember_drift** — warm ember motes floating through smoky orange glow.
+4. **ice_crystals** — icy facets with occasional silver shimmer.
+5. **solar_flare** — twin golden flare sources with moving arcs.
+6. **moonlit_tide** — deep blue tide with bright foam highlights.
+7. **cyber_pulse** — teal/violet data pulses over a dim grid.
+8. **jewel_box** — gemstone facets rotating over a dark base.
 
-## Patterns (5)
+## Improved legacy effects
 
-12. **police_strobe** — Red/blue police strobe
-13. **checkerboard** — Animated checkerboard pattern
-14. **alternating_bars** — Color bar patterns
-15. **spiral** — Spiral mathematical pattern
-16. **kaleidoscope** — Symmetric kaleidoscope pattern
+- **fire_wave** now uses layered coherent flame motion with restrained ember noise instead of per-pixel harsh random flicker.
+- **random_burst** now creates soft radial blooms over a low ambient background instead of abrupt random full-bright bursts.
+- **sparkle** is less noisy and longer-lived.
+- **color_shift** now has stable, softened bands instead of choosing random band widths every frame.
+- **ping_pong** and **mirror_bounce** now have trails, making them look intentional instead of like single diagnostic dots.
 
-## Pulse & strobe (5)
+## Variable rotation timing
 
-17. **color_breathing** — Smooth pulsing glow with color cycle
-18. **heartbeat** — Two-beat heartbeat pulse
-19. **emergency_strobe** — Emergency vehicle strobe
-20. **morse_sos** — Morse code SOS (... --- ...)
-21. **strobe_multicolor** — Random multi-color strobes
+Yes: variable animation length is the right default. A flat 10 seconds cuts off slow-build ambient effects too early and leaves simple scanners/status loops on screen too long.
 
-## Color cycle & gradient (8)
-
-22. **rainbow_cycle** — Full rainbow color cycle
-23. **rainbow_segments** — Each segment region gets a different hue
-24. **gradient_sweep** — Gradient sweeping across display
-25. **sunset** — Sunset color transition (blue→orange→purple→black)
-26. **plasma** — Mathematical plasma effect
-27. **rainbow_spiral** — Spiral rainbow rotation
-28. **beat_pulse** — Synchronized beat pulse
-29. **color_shift** — Shifting color bands
-
-## Nature (5)
-
-30. **aurora** — Aurora borealis
-31. **lightning** — Lightning strike with afterglow
-32. **fireflies** — Twinkling fireflies
-33. **lava_lamp** — Lava lamp blobs
-34. **waterfall** — Cascading waterfall
-
-## Particles & physics (10)
-
-35. **sparkle** — Random sparkle/twinkle
-36. **random_burst** — Random color bursts
-37. **matrix_rain** — Matrix-style green rain
-38. **comet** — Comet with long trailing tail
-39. **fireworks** — Explosion bursts
-40. **meteor** — Meteor shower with trails
-41. **snake** — Snake crawling through LEDs
-42. **bouncing_ball** — Bouncing ball with physics
-43. **ping_pong** — Ball bouncing between CPU/GPU sides
-44. **bubbles** — Rising bubbles
-
-## Audio-inspired (3)
-
-45. **vu_meter** — VU meter bars (per side)
-46. **equalizer** — Multi-band equalizer
-47. **drum_circle** — Polyrhythmic pulses (NEW)
-
-## Retro & games (2)
-
-48. **pacman** — Pac-man chasing a colored ghost
-49. **tetris_blocks** — Falling Tetris blocks
-
-## Display & system (8)
-
-50. **binary_counter** — Binary number counter
-51. **segment_crawl** — Crawl through all segments
-52. **loading_bar** — Progress loading bar
-53. **color_wipe** — Color wipe on/off
-54. **boot_sequence** — System boot sequence
-55. **scan_line** — Scanning line with trail
-56. **traffic_light** — Red → yellow → green cycle
-57. **dna_helix** — DNA double helix pattern
-
-## Stars & space (4)
-
-58. **stars** — Twinkling stars
-59. **disco** — Disco lights with random flash
-60. **warp_speed** — Star Trek warp effect
-61. **binary_rain** — Binary rain columns
-
-## Advanced effects (8)
-
-62. **mirror_bounce** — Mirrored bouncing between sides
-63. **pulse_ring** — Expanding pulse rings from center
-64. **random_walk** — Random walk particles
-65. **glitch** — Glitch / corruption effect
-66. **scanner_sweep** — Multiple scanner beams
-67. **confetti** — Confetti bursts
-68. **ripple** — Water ripple from two sources
-69. **rgb_windmills** — Rotating RGB windmills
-
-## New in Rust (12) ⚡
-
-70. **perlin_field** — Smooth perlin-like noise color field
-71. **fluid_swirl** — Two-vortex fluid color advection
-72. **game_of_life** — 1D cellular automaton (rule 110)
-73. **ferrofluid** — Magnetic ferrofluid spikes with falloff
-74. **color_volcano** — Particles erupting from center
-75. **double_pendulum** — Chaotic double pendulum trace
-76. **wormhole** — Tunneling through concentric colored rings
-77. **starfield_warp** — 3D starfield warp (depth + streaks)
-78. **drum_circle** — Polyrhythmic pulses with coprime periods
-79. **interference** — Two-source wave interference
-80. **magnetic_field** — Dipole field between two poles
-81. **predator_prey** — Lotka-Volterra population dynamics
-
-## Usage
+Runtime behavior:
 
 ```bash
-# Auto-rotate through every animation, 10s each
-./target/release/thermalright-lcd --duration 10
+# Headless auto-rotate: per-animation recommended dwell times
+./target/release/thermalright-lcd --auto-rotate
 
-# Run a specific animation continuously
-./target/release/thermalright-lcd --animation game_of_life
-
-# Faster frame rate
-./target/release/thermalright-lcd --interval 0.01
+# Force old flat timing
+./target/release/thermalright-lcd --auto-rotate --duration 10 --fixed-duration
 ```
+
+Config:
+
+```json
+{
+  "rotation_duration": 10.0,
+  "variable_rotation": true
+}
+```
+
+When `variable_rotation` is true, `rotation_duration` is only the fixed-mode fallback; animation implementations can provide their own recommended dwell time.
+
+## Current catalog
+
+### Waves
+
+- **rainbow_wave_ltr** — Rainbow wave moving left to right
+- **rainbow_wave_rtl** — Rainbow wave moving right to left
+- **dual_wave** — Dual rainbow waves on CPU and GPU sides
+- **ocean_wave** — Ocean-themed wave with blue/cyan colors
+- **fire_wave** — Smoother layered fire wave
+
+### Scanners & chase
+
+- **knight_rider** — Classic K.I.T.T. scanner
+- **cylon_eye** — Battlestar-style scanner on both sides
+- **larson_scanner_dual** — Dual colored scanners
+- **chasing_lights** — Multi-color chase sequence
+- **theater_chase** — Marquee theater chase
+- **lighthouse** — Rotating warm beacon
+
+### Patterns, color and gradients
+
+- **checkerboard** — Animated checkerboard pattern
+- **alternating_bars** — Moving color bars
+- **spiral** — Spiral mathematical pattern
+- **kaleidoscope** — Symmetric mirrored pattern
+- **color_breathing** — Smooth pulsing glow
+- **rainbow_cycle** — Full rainbow color cycle
+- **rainbow_segments** — Each LCD region gets a different hue
+- **gradient_sweep** — Gradient sweeping across display
+- **sunset** — Sunset color transition
+- **plasma** — Mathematical plasma effect
+- **rainbow_spiral** — Rotating rainbow spiral
+- **beat_pulse** — Synchronized beat pulse
+- **color_shift** — Soft shifting color bands
+
+### Nature and ambient
+
+- **aurora** — Aurora borealis
+- **lightning** — Lightning strike with afterglow
+- **fireflies** — Twinkling fireflies
+- **lava_lamp** — Lava lamp blobs
+- **waterfall** — Cascading waterfall
+- **nebula_drift** — Slow cinematic nebula clouds
+- **prism_bloom** — Soft prismatic blooms
+- **ember_drift** — Smoky warm ember drift
+- **ice_crystals** — Crystalline ice shimmer
+- **solar_flare** — Golden flare arcs
+- **moonlit_tide** — Blue tide with silver foam
+- **jewel_box** — Gemstone facets
+
+### Particles & physics
+
+- **sparkle** — Random sparkle/twinkle
+- **random_burst** — Soft random color blooms
+- **matrix_rain** — Matrix-style green rain
+- **comet** — Comet with long trailing tail
+- **fireworks** — Explosion bursts
+- **meteor** — Meteor shower with trails
+- **snake** — Snake crawling through LEDs
+- **bouncing_ball** — Bouncing ball with physics
+- **ping_pong** — Traced ball bouncing between CPU/GPU sides
+- **bubbles** — Rising bubbles
+- **confetti** — Confetti burst
+- **random_walk** — Random-walk particles
+- **pulse_ring** — Expanding pulse rings
+
+### Audio-inspired
+
+- **vu_meter** — VU meter bars
+- **equalizer** — Multi-band equalizer
+- **drum_circle** — Polyrhythmic pulses
+
+### Retro & games
+
+- **pacman** — Pac-man chasing a colored ghost
+- **tetris_blocks** — Falling Tetris blocks
+
+### Display-like but still visual
+
+- **segment_crawl** — Crawl through all segments
+- **color_wipe** — Color wipe on/off
+- **scan_line** — Scanning line with trail
+- **dna_helix** — DNA double helix pattern
+- **binary_rain** — Binary rain columns
+- **cyber_pulse** — Sleek data pulses
+
+### Stars & space
+
+- **stars** — Twinkling stars
+- **warp_speed** — Star Trek warp effect
+- **starfield_warp** — 3D starfield warp
+- **wormhole** — Tunneling through colored rings
+
+### Advanced / scientific effects
+
+- **mirror_bounce** — Mirrored trails between sides
+- **ripple** — Water ripple from two sources
+- **rgb_windmills** — Rotating RGB windmills
+- **glitch** — Glitch/corruption effect
+- **scanner_sweep** — Multiple scanner beams
+- **perlin_field** — Smooth noise color field
+- **fluid_swirl** — Two-vortex fluid color advection
+- **game_of_life** — 1D cellular automaton
+- **ferrofluid** — Magnetic ferrofluid spikes
+- **color_volcano** — Eruption of colored particles
+- **double_pendulum** — Chaotic double-pendulum trace
+- **interference** — Two-source wave interference
+- **magnetic_field** — Dipole field between two poles
+- **predator_prey** — Lotka-Volterra population dynamics
 
 ## Tips
 
-- Frame interval 0.015s (~67 fps) is the default; many animations look great at 0.01s
-- Nature animations (aurora, lightning, fireflies) are subtle and atmospheric
-- New chaotic ones (double_pendulum, game_of_life, predator_prey) never look the same twice
-- Scanner classics (knight_rider, cylon_eye) are still hard to beat
+- Use variable rotation for unattended mode. Slow ambient animations need 14–18 seconds; scanners and simple loops are fine around 10 seconds.
+- Keep frame interval near 0.015s unless the hardware link is stable at faster rates.
+- If you want a calmer daily rotation, prioritize: `nebula_drift`, `prism_bloom`, `ember_drift`, `ice_crystals`, `moonlit_tide`, `aurora`, `lava_lamp`, `fluid_swirl`, `perlin_field`, `stars`.

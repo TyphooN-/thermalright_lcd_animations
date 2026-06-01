@@ -1,6 +1,6 @@
 # Thermalright LCD Animations
 
-A creative animation suite for Thermalright Peerless Assassin USB LCD coolers, written in Rust. Drives all 84 LEDs across both CPU and GPU panels with 80+ animations.
+A creative animation suite for Thermalright Peerless Assassin USB LCD coolers, written in Rust. Drives all 84 LEDs across both CPU and GPU panels with 79 curated animations.
 
 This repo started as a Python project; it was rewritten in Rust to slash its 24/7 footprint. Measured on the same hardware running the same animation at the same frame rate:
 
@@ -9,13 +9,13 @@ This repo started as a Python project; it was rewritten in Rust to slash its 24/
 | Resident memory | 30.5 MB | 3.8 MB | **-88%** |
 | CPU (one core) | ~1.0% | 0.2% | **-5x** |
 | Process layout | interpreter + numpy + hid | single static binary | — |
-| Animations | 68 | 80 (12 new) | +12 |
+| Animations | 68 | 79 curated | +11 net after retiring harsh/status effects |
 
 The bottleneck is USB HID I/O, not host CPU — but eliminating Python's interpreter overhead recovers ~27 MB of RAM and a measurable fraction of a core that would otherwise be paid every second for the life of the system.
 
 ## Features
 
-- 80 animations across waves, scanners, patterns, effects, displays, physics, nature, retro games, and chaotic/scientific simulations
+- 79 curated animations across waves, scanners, patterns, effects, physics, nature, retro games, cinematic ambient loops, and chaotic/scientific simulations
 - Interactive TUI with keyboard navigation (`←`/`→`/space/m/`±`/`[`/`]`/q)
 - Single-animation mode and auto-rotate mode
 - Configurable via CLI flags or `config.json`
@@ -58,8 +58,11 @@ sudo ./install.sh
 # Run one animation continuously
 ./target/release/thermalright-lcd --animation game_of_life
 
-# Auto-rotate through every animation, 10s each
-./target/release/thermalright-lcd --duration 10
+# Headless auto-rotate through every animation using per-animation dwell times by default
+./target/release/thermalright-lcd --auto-rotate
+
+# Force old fixed-duration rotation
+./target/release/thermalright-lcd --auto-rotate --duration 10 --fixed-duration
 
 # Faster frame interval (default 0.015s = ~67 fps)
 ./target/release/thermalright-lcd --interval 0.01
@@ -86,16 +89,17 @@ sudo ./install.sh
   "product_id": "0x8001",
   "animation_mode": "interactive",
   "rotation_duration": 10.0,
+  "variable_rotation": true,
   "update_interval": 0.015,
   "animations": ["rainbow_cycle", "game_of_life", "fluid_swirl", "..."]
 }
 ```
 
-If `animation_mode` is `"interactive"` (or missing) the TUI is the default. Set it to anything else (e.g. `"auto_rotate"`) to run headless rotation.
+If `animation_mode` is `"interactive"` (or missing) the TUI is the default. Set it to anything else (e.g. `"auto_rotate"`) to run headless rotation. With `variable_rotation: true` (default), each animation uses its own recommended dwell time; pass `--fixed-duration` or set `variable_rotation: false` to force `rotation_duration` for every animation.
 
 ## Animation catalog
 
-See [`ANIMATIONS.md`](ANIMATIONS.md) for the full list grouped by category, including the 12 new Rust-only additions (Game of Life, Perlin field, Fluid Swirl, Ferrofluid, Color Volcano, Double Pendulum, Wormhole, Starfield Warp, Drum Circle, Interference, Magnetic Field, Predator-Prey).
+See [`ANIMATIONS.md`](ANIMATIONS.md) for the full curated list, including the Rust-only simulations plus the new cinematic ambient set (Nebula Drift, Prism Bloom, Ember Drift, Ice Crystals, Solar Flare, Moonlit Tide, Cyber Pulse, Jewel Box). Harsh/status effects such as police/emergency strobes, SOS, loading bars, binary counter, traffic light, and disco were retired from the public catalog.
 
 ## License
 

@@ -25,6 +25,7 @@ struct Config {
     product_id: Option<String>,
     animation_mode: Option<String>,
     rotation_duration: Option<f32>,
+    variable_rotation: Option<bool>,
     update_interval: Option<f32>,
     animations: Option<Vec<String>>,
 }
@@ -35,7 +36,11 @@ fn parse_hex_u16(s: &str) -> u16 {
 }
 
 #[derive(Parser, Debug)]
-#[command(name = "thermalright-lcd", version, about = "Thermalright LCD Animations (Rust)")]
+#[command(
+    name = "thermalright-lcd",
+    version,
+    about = "Thermalright LCD Animations (Rust)"
+)]
 struct Cli {
     /// Path to config file
     #[arg(short, long)]
@@ -60,6 +65,14 @@ struct Cli {
     /// Interactive mode with keyboard controls
     #[arg(long)]
     interactive: bool,
+
+    /// Headless auto-rotate mode
+    #[arg(long)]
+    auto_rotate: bool,
+
+    /// Disable per-animation recommended dwell times in auto-rotate mode
+    #[arg(long)]
+    fixed_duration: bool,
 }
 
 fn load_config(path: Option<&PathBuf>) -> Config {
@@ -123,12 +136,20 @@ fn run_auto_rotate(
     lcd: &mut LcdController,
     selected: &[String],
     rotation_duration: f32,
+    variable_rotation: bool,
     interval: f32,
 ) -> i32 {
     let entries = animations::all();
     println!("\n Auto-Rotate Mode");
     println!("======================================================================");
-    println!("Rotation Duration: {}s", rotation_duration);
+    println!(
+        "Rotation Duration: {}",
+        if variable_rotation {
+            "variable per animation".to_string()
+        } else {
+            format!("{}s fixed", rotation_duration)
+        }
+    );
     println!("Update Interval: {}s", interval);
     println!("Animations: {}", selected.len());
     println!("\nPress Ctrl+C to stop\n");
@@ -146,9 +167,15 @@ fn run_auto_rotate(
         };
         println!("[{}/{}] {}", idx + 1, selected.len(), entry.name);
         let mut anim = (entry.factory)();
+        let effective_duration = if variable_rotation {
+            anim.preferred_duration()
+        } else {
+            rotation_duration
+        };
+        println!("    dwell: {:.1}s", effective_duration);
         anim.reset(lcd);
         let start = Instant::now();
-        while start.elapsed() < Duration::from_secs_f32(rotation_duration) {
+        while start.elapsed() < Duration::from_secs_f32(effective_duration) {
             anim.update(lcd);
             lcd.send_packets();
             sleep(Duration::from_secs_f32(interval));
@@ -187,6 +214,7 @@ fn main() {
         .duration
         .or(config.rotation_duration)
         .unwrap_or(DEFAULT_ROTATION_DURATION);
+    let variable_rotation = config.variable_rotation.unwrap_or(true) && !cli.fixed_duration;
 
     println!("Initializing LCD Controller...");
     println!("Vendor ID: 0x{:04x}", vendor_id);
@@ -216,7 +244,7 @@ fn main() {
     }
 
     let mode = config.animation_mode.as_deref().unwrap_or("interactive");
-    if cli.interactive || mode == "interactive" {
+    if !cli.auto_rotate && (cli.interactive || mode == "interactive") {
         let mut controller = InteractiveController::new(lcd, interval);
         if let Err(e) = controller.run() {
             eprintln!("Interactive error: {}", e);
@@ -226,7 +254,16 @@ fn main() {
     }
 
     let selected: Vec<String> = config.animations.unwrap_or_else(|| {
-        animations::all().iter().map(|e| e.name.to_string()).collect()
+        animations::all()
+            .iter()
+            .map(|e| e.name.to_string())
+            .collect()
     });
-    std::process::exit(run_auto_rotate(&mut lcd, &selected, duration, interval));
+    std::process::exit(run_auto_rotate(
+        &mut lcd,
+        &selected,
+        duration,
+        variable_rotation,
+        interval,
+    ));
 }

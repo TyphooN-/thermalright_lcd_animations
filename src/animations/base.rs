@@ -90,17 +90,29 @@ impl Animation for FireWave {
         lcd.set_all_leds(true);
         let pal = palette::FIRE;
         let mut rng = rand::thread_rng();
+        let t = self.frame as f32 * 0.09;
         for i in 0..NUMBER_OF_LEDS {
-            let mut offset =
-                ((self.frame as f32 * 0.15 + i as f32 * 0.1).sin() + rng.gen_range(-0.4..0.4)).abs();
-            offset = offset.clamp(0.0, 1.0);
-            if rng.gen::<f32>() < 0.1 {
-                offset = rng.gen_range(0.8..1.0);
-            }
+            let x = i as f32;
+            let flame = (x * 0.18 + t).sin() * 0.45
+                + (x * 0.41 - t * 1.6).sin() * 0.25
+                + rng.gen_range(-0.08..0.08);
+            let ember = if rng.gen::<f32>() < 0.025 {
+                rng.gen_range(0.15..0.35)
+            } else {
+                0.0
+            };
+            let offset = (flame.abs() + ember).clamp(0.0, 1.0);
             let idx = (offset * (pal.len() - 1) as f32) as usize;
-            lcd.set_color(i, pal[idx.min(pal.len() - 1)]);
+            let mut c = pal[idx.min(pal.len() - 1)];
+            let glow = 0.65 + offset * 0.35;
+            c = color::scale(c, glow);
+            lcd.set_color(i, c);
         }
         self.frame = self.frame.wrapping_add(1);
+    }
+
+    fn preferred_duration(&self) -> f32 {
+        12.0
     }
 }
 
@@ -178,8 +190,7 @@ impl Animation for LarsonScannerDual {
     fn update(&mut self, lcd: &mut LcdController) {
         lcd.clear();
         let mut cpu_pos = (self.frame / 2) as i32 % 84;
-        let mut gpu_pos =
-            (NUMBER_OF_LEDS as i32 - (self.frame / 2) as i32).rem_euclid(84);
+        let mut gpu_pos = (NUMBER_OF_LEDS as i32 - (self.frame / 2) as i32).rem_euclid(84);
         if cpu_pos >= 42 {
             cpu_pos = 84 - cpu_pos - 1;
         }
@@ -250,27 +261,6 @@ impl Animation for TheaterChase {
 // ---------------------------------------------------------------------------
 // Patterns
 // ---------------------------------------------------------------------------
-
-#[derive(Default)]
-pub struct PoliceStrobe {
-    frame: u32,
-}
-impl Animation for PoliceStrobe {
-    fn update(&mut self, lcd: &mut LcdController) {
-        lcd.clear();
-        let cycle = (self.frame / 5) % 4;
-        if cycle < 2 {
-            lcd.set_leds(CPU_ALL, true);
-            lcd.set_all_colors(color::RED);
-        } else {
-            lcd.set_leds(GPU_ALL, true);
-            for &i in GPU_ALL {
-                lcd.set_color(i, color::BLUE);
-            }
-        }
-        self.frame = self.frame.wrapping_add(1);
-    }
-}
 
 #[derive(Default)]
 pub struct Checkerboard {
@@ -359,19 +349,15 @@ impl Animation for Sparkle {
         }
 
         let mut rng = rand::thread_rng();
-        let num_new = if rng.gen::<f32>() < 0.4 {
-            rng.gen_range(1..=3)
+        let num_new = if rng.gen::<f32>() < 0.22 {
+            rng.gen_range(1..=2)
         } else {
             0
         };
         for _ in 0..num_new {
             let idx = rng.gen_range(0..NUMBER_OF_LEDS);
-            let c = color::hsv(
-                rng.gen_range(0.0..360.0),
-                rng.gen_range(0.8..1.0),
-                1.0,
-            );
-            let life = rng.gen_range(10..35);
+            let c = color::hsv(rng.gen_range(0.0..360.0), rng.gen_range(0.8..1.0), 1.0);
+            let life = rng.gen_range(18..45);
             self.active.insert(idx, (c, life));
             lcd.set_led(idx, true);
             lcd.set_color(idx, c);
@@ -393,26 +379,33 @@ pub struct RandomBurst {
 impl Animation for RandomBurst {
     fn update(&mut self, lcd: &mut LcdController) {
         let mut rng = rand::thread_rng();
+        lcd.set_all_leds(true);
+        let base_hue = (self.frame as f32 * 0.35).rem_euclid(360.0);
+        for i in 0..NUMBER_OF_LEDS {
+            let wave = ((i as f32 * 0.11 + self.frame as f32 * 0.03).sin() * 0.5 + 0.5) * 0.10;
+            lcd.set_color(i, color::hsv(base_hue + i as f32 * 0.8, 0.55, 0.03 + wave));
+        }
         if self.next_burst == 0 || self.frame >= self.next_burst {
-            lcd.clear();
-            let n = rng.gen_range(8..=25);
-            if rng.gen::<f32>() < 0.6 {
-                let c = color::hsv(rng.gen_range(0.0..360.0), 1.0, 1.0);
-                for _ in 0..n {
-                    let i = rng.gen_range(0..NUMBER_OF_LEDS);
-                    lcd.set_led(i, true);
-                    lcd.set_color(i, c);
-                }
-            } else {
-                for _ in 0..n {
-                    let i = rng.gen_range(0..NUMBER_OF_LEDS);
-                    lcd.set_led(i, true);
-                    lcd.set_color(i, color::hsv(rng.gen_range(0.0..360.0), 1.0, 1.0));
+            let center = rng.gen_range(0..NUMBER_OF_LEDS) as i32;
+            let hue = rng.gen_range(0.0..360.0);
+            let radius = rng.gen_range(8..=18);
+            for off in -radius..=radius {
+                let idx = center + off;
+                if (0..NUMBER_OF_LEDS as i32).contains(&idx) {
+                    let b = 1.0 - off.abs() as f32 / radius as f32;
+                    lcd.set_color(
+                        idx as usize,
+                        color::hsv(hue + off as f32 * 2.0, 0.85, b.powf(1.4)),
+                    );
                 }
             }
-            self.next_burst = self.frame + rng.gen_range(10..=20);
+            self.next_burst = self.frame + rng.gen_range(22..=55);
         }
         self.frame = self.frame.wrapping_add(1);
+    }
+
+    fn preferred_duration(&self) -> f32 {
+        11.0
     }
 }
 
@@ -541,25 +534,6 @@ impl Animation for MatrixRain {
 // ---------------------------------------------------------------------------
 
 #[derive(Default)]
-pub struct BinaryCounter {
-    frame: u32,
-}
-impl Animation for BinaryCounter {
-    fn update(&mut self, lcd: &mut LcdController) {
-        lcd.clear();
-        let count = ((self.frame / 10) % 256) as u32;
-        for i in 0..8.min(NUMBER_OF_LEDS) {
-            if count & (1 << i) != 0 {
-                lcd.set_led(i, true);
-                let hue = ((i as i32 * 45).rem_euclid(360)) as f32;
-                lcd.set_color(i, color::hsv(hue, 1.0, 1.0));
-            }
-        }
-        self.frame = self.frame.wrapping_add(1);
-    }
-}
-
-#[derive(Default)]
 pub struct SegmentCrawl {
     frame: u32,
 }
@@ -574,25 +548,6 @@ impl Animation for SegmentCrawl {
             let hue = ((self.frame as i64 + i as i64 * 5).rem_euclid(360)) as f32;
             lcd.set_led(led, true);
             lcd.set_color(led, color::hsv(hue, 1.0, b));
-        }
-        self.frame = self.frame.wrapping_add(1);
-    }
-}
-
-#[derive(Default)]
-pub struct LoadingBar {
-    frame: u32,
-}
-impl Animation for LoadingBar {
-    fn update(&mut self, lcd: &mut LcdController) {
-        lcd.clear();
-        let progress = (self.frame % 100) as f32 / 100.0;
-        let n = (progress * NUMBER_OF_LEDS as f32) as usize;
-        for i in 0..n {
-            let factor = i as f32 / NUMBER_OF_LEDS as f32;
-            let c = color::interpolate(color::GREEN, color::RED, factor);
-            lcd.set_led(i, true);
-            lcd.set_color(i, c);
         }
         self.frame = self.frame.wrapping_add(1);
     }

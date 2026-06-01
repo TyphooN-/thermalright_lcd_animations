@@ -53,75 +53,6 @@ impl Animation for Lighthouse {
     }
 }
 
-#[derive(Default)]
-pub struct EmergencyStrobe {
-    frame: u32,
-}
-impl Animation for EmergencyStrobe {
-    fn update(&mut self, lcd: &mut LcdController) {
-        lcd.clear();
-        let pattern = (self.frame / 3) % 8;
-        if pattern < 3 {
-            lcd.set_leds(CPU_ALL, true);
-            for &i in CPU_ALL {
-                lcd.set_color(i, color::RED);
-            }
-        } else if pattern < 6 {
-            lcd.set_leds(GPU_ALL, true);
-            for &i in GPU_ALL {
-                lcd.set_color(i, color::BLUE);
-            }
-        }
-        self.frame = self.frame.wrapping_add(1);
-    }
-}
-
-pub struct MorseSos {
-    frame: u32,
-    pattern: &'static [u8],
-}
-impl Default for MorseSos {
-    fn default() -> Self {
-        Self {
-            frame: 0,
-            pattern: &[
-                1, 0, 1, 0, 1, 0, 0, 0, // S
-                3, 0, 3, 0, 3, 0, 0, 0, // O
-                1, 0, 1, 0, 1, 0, 0, 0, 0, 0, // S + gap
-            ],
-        }
-    }
-}
-impl Animation for MorseSos {
-    fn update(&mut self, lcd: &mut LcdController) {
-        let idx = (self.frame as usize) % self.pattern.len();
-        if self.pattern[idx] > 0 {
-            lcd.set_all_leds(true);
-            lcd.set_all_colors(color::WHITE);
-        } else {
-            lcd.clear();
-        }
-        self.frame = self.frame.wrapping_add(1);
-    }
-}
-
-#[derive(Default)]
-pub struct StrobeMulticolor {
-    frame: u32,
-}
-impl Animation for StrobeMulticolor {
-    fn update(&mut self, lcd: &mut LcdController) {
-        if self.frame % 10 < 3 {
-            lcd.set_all_leds(true);
-            let hue: f32 = rand::thread_rng().gen_range(0.0..360.0);
-            lcd.set_all_colors(color::hsv(hue, 1.0, 1.0));
-        } else {
-            lcd.clear();
-        }
-        self.frame = self.frame.wrapping_add(1);
-    }
-}
-
 // ---------------------------------------------------------------------------
 // Geometric
 // ---------------------------------------------------------------------------
@@ -132,7 +63,10 @@ pub struct Snake {
 }
 impl Default for Snake {
     fn default() -> Self {
-        Self { frame: 0, length: 20 }
+        Self {
+            frame: 0,
+            length: 20,
+        }
     }
 }
 impl Animation for Snake {
@@ -158,7 +92,12 @@ pub struct BouncingBall {
 }
 impl BouncingBall {
     pub fn new() -> Self {
-        Self { frame: 0, position: 0.0, velocity: 2.0, gravity: 0.2 }
+        Self {
+            frame: 0,
+            position: 0.0,
+            velocity: 2.0,
+            gravity: 0.2,
+        }
     }
 }
 impl Animation for BouncingBall {
@@ -201,7 +140,12 @@ pub struct PingPong {
 }
 impl PingPong {
     pub fn new() -> Self {
-        Self { frame: 0, pos: 0.0, side_cpu: true, vel: 2.0 }
+        Self {
+            frame: 0,
+            pos: 0.0,
+            side_cpu: true,
+            vel: 2.0,
+        }
     }
 }
 impl Animation for PingPong {
@@ -213,12 +157,16 @@ impl Animation for PingPong {
             self.pos = 0.0;
         }
         let region = if self.side_cpu { CPU_ALL } else { GPU_ALL };
-        let p = self.pos as usize;
-        if p < region.len() {
-            let led = region[p];
-            let c = if self.side_cpu { color::YELLOW } else { color::CYAN };
-            lcd.set_led(led, true);
-            lcd.set_color(led, c);
+        let p = self.pos as i32;
+        let hue = if self.side_cpu { 48.0 } else { 188.0 };
+        for tail in 0..8 {
+            let idx = p - tail;
+            if (0..region.len() as i32).contains(&idx) {
+                let led = region[idx as usize];
+                let b = (1.0 - tail as f32 / 8.0).powf(1.7);
+                lcd.set_led(led, true);
+                lcd.set_color(led, color::hsv(hue, 0.9, b));
+            }
         }
         self.frame = self.frame.wrapping_add(1);
     }
@@ -282,7 +230,10 @@ pub struct Equalizer {
 }
 impl Equalizer {
     pub fn new() -> Self {
-        Self { frame: 0, band_heights: vec![0.0; 7] }
+        Self {
+            frame: 0,
+            band_heights: vec![0.0; 7],
+        }
     }
 }
 impl Animation for Equalizer {
@@ -341,7 +292,11 @@ pub struct Lightning {
 impl Lightning {
     pub fn new() -> Self {
         let mut rng = rand::thread_rng();
-        Self { frame: 0, strike_frame: 0, next_strike: rng.gen_range(50..=150) }
+        Self {
+            frame: 0,
+            strike_frame: 0,
+            next_strike: rng.gen_range(50..=150),
+        }
     }
 }
 impl Animation for Lightning {
@@ -447,7 +402,11 @@ pub struct Pacman {
 }
 impl Pacman {
     pub fn new() -> Self {
-        Self { frame: 0, pacman_pos: 0, ghost_pos: -10 }
+        Self {
+            frame: 0,
+            pacman_pos: 0,
+            ghost_pos: -10,
+        }
     }
 }
 impl Animation for Pacman {
@@ -648,15 +607,19 @@ pub struct MirrorBounce {
 impl Animation for MirrorBounce {
     fn update(&mut self, lcd: &mut LcdController) {
         lcd.clear();
-        let pos = ((self.frame / 2) % 42) as usize;
-        if pos < CPU_ALL.len() {
-            lcd.set_led(CPU_ALL[pos], true);
-            lcd.set_color(CPU_ALL[pos], color::MAGENTA);
-        }
-        let mirror = 41 - pos;
-        if mirror < GPU_ALL.len() {
-            lcd.set_led(GPU_ALL[mirror], true);
-            lcd.set_color(GPU_ALL[mirror], color::CYAN);
+        let pos = ((self.frame / 2) % 42) as i32;
+        for tail in 0..10 {
+            let b = (1.0 - tail as f32 / 10.0).powf(1.5);
+            let cpu = pos - tail;
+            if (0..CPU_ALL.len() as i32).contains(&cpu) {
+                lcd.set_led(CPU_ALL[cpu as usize], true);
+                lcd.set_color(CPU_ALL[cpu as usize], color::hsv(308.0, 0.85, b));
+            }
+            let gpu = 41 - pos + tail;
+            if (0..GPU_ALL.len() as i32).contains(&gpu) {
+                lcd.set_led(GPU_ALL[gpu as usize], true);
+                lcd.set_color(GPU_ALL[gpu as usize], color::hsv(184.0, 0.85, b));
+            }
         }
         self.frame = self.frame.wrapping_add(1);
     }
@@ -680,32 +643,6 @@ impl Animation for Sunset {
             color::interpolate(color::hex("4A148C"), color::hex("0A0A0A"), (t - 0.8) / 0.2)
         };
         lcd.set_all_colors(c);
-        self.frame = self.frame.wrapping_add(1);
-    }
-}
-
-#[derive(Default)]
-pub struct BootSequence {
-    frame: u32,
-}
-impl Animation for BootSequence {
-    fn update(&mut self, lcd: &mut LcdController) {
-        lcd.clear();
-        let progress = self.frame % 100;
-        let n = ((progress as f32 / 100.0) * NUMBER_OF_LEDS as f32) as usize;
-        for i in 0..n {
-            lcd.set_led(i, true);
-            let c = if progress > 95 {
-                if (self.frame % 10) < 5 {
-                    color::GREEN
-                } else {
-                    color::BLACK
-                }
-            } else {
-                color::GREEN
-            };
-            lcd.set_color(i, c);
-        }
         self.frame = self.frame.wrapping_add(1);
     }
 }
@@ -742,36 +679,6 @@ impl Animation for Kaleidoscope {
             let c = color::hsv(hue, 1.0, 1.0);
             lcd.set_color(i, c);
             lcd.set_color(NUMBER_OF_LEDS - 1 - i, c);
-        }
-        self.frame = self.frame.wrapping_add(1);
-    }
-}
-
-#[derive(Default)]
-pub struct TrafficLight {
-    frame: u32,
-}
-impl Animation for TrafficLight {
-    fn update(&mut self, lcd: &mut LcdController) {
-        lcd.clear();
-        let phase = (self.frame / 30) % 3;
-        match phase {
-            0 => {
-                lcd.set_leds(CPU_ALL, true);
-                for &i in CPU_ALL {
-                    lcd.set_color(i, color::RED);
-                }
-            }
-            1 => {
-                lcd.set_all_leds(true);
-                lcd.set_all_colors(color::YELLOW);
-            }
-            _ => {
-                lcd.set_leds(GPU_ALL, true);
-                for &i in GPU_ALL {
-                    lcd.set_color(i, color::GREEN);
-                }
-            }
         }
         self.frame = self.frame.wrapping_add(1);
     }
@@ -824,14 +731,20 @@ pub struct RgbWindmills {
 }
 impl Default for RgbWindmills {
     fn default() -> Self {
-        Self { frame: 0, num_mills: 12, blade_length: 3, rotation_speed: 8 }
+        Self {
+            frame: 0,
+            num_mills: 12,
+            blade_length: 3,
+            rotation_speed: 8,
+        }
     }
 }
 impl Animation for RgbWindmills {
     fn update(&mut self, lcd: &mut LcdController) {
         lcd.clear();
         for mill_idx in 0..self.num_mills {
-            let center = (((mill_idx as f32 + 0.5) * (NUMBER_OF_LEDS as f32 / self.num_mills as f32))
+            let center = (((mill_idx as f32 + 0.5)
+                * (NUMBER_OF_LEDS as f32 / self.num_mills as f32))
                 as i32)
                 .min(NUMBER_OF_LEDS as i32 - 1);
             let rotation = (self.frame / self.rotation_speed + mill_idx as u32) % 4;
@@ -985,25 +898,6 @@ impl Animation for Stars {
     }
 }
 
-#[derive(Default)]
-pub struct Disco {
-    frame: u32,
-}
-impl Animation for Disco {
-    fn update(&mut self, lcd: &mut LcdController) {
-        lcd.clear();
-        let mut rng = rand::thread_rng();
-        let n = rng.gen_range(8..=20);
-        for _ in 0..n {
-            let idx = rng.gen_range(0..NUMBER_OF_LEDS);
-            let hue: f32 = rng.gen_range(0.0..360.0);
-            lcd.set_led(idx, true);
-            lcd.set_color(idx, color::hsv(hue, 1.0, 1.0));
-        }
-        self.frame = self.frame.wrapping_add(1);
-    }
-}
-
 struct WarpStar {
     pos: f32,
     speed: f32,
@@ -1149,14 +1043,19 @@ pub struct ColorShift {
 impl Animation for ColorShift {
     fn update(&mut self, lcd: &mut LcdController) {
         lcd.set_all_leds(true);
-        let mut rng = rand::thread_rng();
-        let band_w: i64 = rng.gen_range(5..=15);
+        let band_w: i64 = 9;
+        let t = self.frame as f32 * 0.035;
         for i in 0..NUMBER_OF_LEDS {
-            let band_idx = ((i as i64 + self.frame as i64) / band_w) % 6;
-            let hue = ((band_idx * 60 + rng.gen_range(-10..=10)).rem_euclid(360)) as f32;
-            lcd.set_color(i, color::hsv(hue, 1.0, 1.0));
+            let band_idx = ((i as i64 + (self.frame / 4) as i64) / band_w) % 6;
+            let soft_edge = ((i as f32 * 0.18 + t).sin() * 0.5 + 0.5) * 18.0;
+            let hue = ((band_idx * 42) as f32 + soft_edge + t * 20.0).rem_euclid(360.0);
+            lcd.set_color(i, color::hsv(hue, 0.82, 0.82));
         }
         self.frame = self.frame.wrapping_add(1);
+    }
+
+    fn preferred_duration(&self) -> f32 {
+        12.0
     }
 }
 
@@ -1307,7 +1206,11 @@ impl Animation for Confetti {
                 let idx = rng.gen_range(0..NUMBER_OF_LEDS);
                 let c = color::wheel(rng.gen_range(0..=255));
                 let life = rng.gen_range(20..=40);
-                self.pieces.push(ConfettiPiece { idx, color: c, life });
+                self.pieces.push(ConfettiPiece {
+                    idx,
+                    color: c,
+                    life,
+                });
                 lcd.set_led(idx, true);
                 lcd.set_color(idx, c);
             }

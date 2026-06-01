@@ -6,6 +6,14 @@ pub trait Animation: Send {
     fn reset(&mut self, lcd: &mut LcdController) {
         lcd.clear();
     }
+
+    /// Recommended auto-rotation dwell time for this animation.
+    ///
+    /// Effects with slow build-up or narrative arcs need longer than quick
+    /// scanners/strobes. The runner can still force a fixed duration.
+    fn preferred_duration(&self) -> f32 {
+        10.0
+    }
 }
 
 mod base;
@@ -37,7 +45,6 @@ const REGISTRY: &[Entry] = &[
     Entry { name: "larson_scanner_dual",desc: "Dual Larson scanners on CPU and GPU",     factory: || Box::new(base::LarsonScannerDual::default()) },
     Entry { name: "chasing_lights",     desc: "Chasing lights",                          factory: || Box::new(base::ChasingLights::default()) },
     Entry { name: "theater_chase",      desc: "Theater marquee chase",                   factory: || Box::new(base::TheaterChase::default()) },
-    Entry { name: "police_strobe",      desc: "Police strobe (red/blue)",                factory: || Box::new(base::PoliceStrobe::default()) },
     Entry { name: "checkerboard",       desc: "Checkerboard pattern",                    factory: || Box::new(base::Checkerboard::default()) },
     Entry { name: "alternating_bars",   desc: "Alternating color bars",                  factory: || Box::new(base::AlternatingBars::default()) },
     Entry { name: "color_breathing",    desc: "Smooth breathing effect",                 factory: || Box::new(base::ColorBreathing::default()) },
@@ -47,18 +54,13 @@ const REGISTRY: &[Entry] = &[
     Entry { name: "gradient_sweep",     desc: "Gradient sweep across display",           factory: || Box::new(base::GradientSweep::new()) },
     Entry { name: "plasma",             desc: "Plasma effect",                           factory: || Box::new(base::Plasma::new()) },
     Entry { name: "matrix_rain",        desc: "Matrix-style rain",                       factory: || Box::new(base::MatrixRain::new()) },
-    Entry { name: "binary_counter",     desc: "Binary counter",                          factory: || Box::new(base::BinaryCounter::default()) },
     Entry { name: "segment_crawl",      desc: "Crawl through display segments",          factory: || Box::new(base::SegmentCrawl::default()) },
-    Entry { name: "loading_bar",        desc: "Loading bar",                             factory: || Box::new(base::LoadingBar::default()) },
     Entry { name: "color_wipe",         desc: "Color wipe effect",                       factory: || Box::new(base::ColorWipe::default()) },
     Entry { name: "rainbow_segments",   desc: "Each region gets different rainbow color",factory: || Box::new(base::RainbowSegments::default()) },
 
     // ---- extended library (from animation_library_extended.py) ----
     Entry { name: "heartbeat",          desc: "Heartbeat pulse",                         factory: || Box::new(extended::Heartbeat::default()) },
     Entry { name: "lighthouse",         desc: "Rotating lighthouse beacon",              factory: || Box::new(extended::Lighthouse::default()) },
-    Entry { name: "emergency_strobe",   desc: "Emergency vehicle strobe",                factory: || Box::new(extended::EmergencyStrobe::default()) },
-    Entry { name: "morse_sos",          desc: "Morse code SOS",                          factory: || Box::new(extended::MorseSos::default()) },
-    Entry { name: "strobe_multicolor",  desc: "Multi-color strobe",                      factory: || Box::new(extended::StrobeMulticolor::default()) },
     Entry { name: "snake",              desc: "Snake crawling",                          factory: || Box::new(extended::Snake::default()) },
     Entry { name: "bouncing_ball",      desc: "Bouncing ball with physics",              factory: || Box::new(extended::BouncingBall::new()) },
     Entry { name: "ping_pong",          desc: "Ball ping pong between CPU and GPU",      factory: || Box::new(extended::PingPong::new()) },
@@ -79,15 +81,12 @@ const REGISTRY: &[Entry] = &[
     Entry { name: "rainbow_spiral",     desc: "Rainbow spiral",                          factory: || Box::new(extended::RainbowSpiral::default()) },
     Entry { name: "mirror_bounce",      desc: "Mirror effect bouncing between sides",    factory: || Box::new(extended::MirrorBounce::default()) },
     Entry { name: "sunset",             desc: "Sunset color transition",                 factory: || Box::new(extended::Sunset::default()) },
-    Entry { name: "boot_sequence",      desc: "Boot sequence simulation",                factory: || Box::new(extended::BootSequence::default()) },
     Entry { name: "scan_line",          desc: "Scanning line",                           factory: || Box::new(extended::ScanLine::default()) },
     Entry { name: "kaleidoscope",       desc: "Kaleidoscope",                            factory: || Box::new(extended::Kaleidoscope::default()) },
-    Entry { name: "traffic_light",      desc: "Traffic light sequence",                  factory: || Box::new(extended::TrafficLight::default()) },
     Entry { name: "meteor",             desc: "Meteor shower",                           factory: || Box::new(extended::Meteor::default()) },
     Entry { name: "rgb_windmills",      desc: "Rotating RGB windmills",                  factory: || Box::new(extended::RgbWindmills::default()) },
     Entry { name: "bubbles",            desc: "Rising bubbles",                          factory: || Box::new(extended::Bubbles::default()) },
     Entry { name: "stars",              desc: "Twinkling stars",                         factory: || Box::new(extended::Stars::new()) },
-    Entry { name: "disco",              desc: "Disco lights",                            factory: || Box::new(extended::Disco::default()) },
     Entry { name: "warp_speed",         desc: "Star Trek warp speed",                    factory: || Box::new(extended::WarpSpeed::default()) },
     Entry { name: "binary_rain",        desc: "Binary rain",                             factory: || Box::new(extended::BinaryRain::new()) },
     Entry { name: "pulse_ring",         desc: "Expanding pulse rings",                   factory: || Box::new(extended::PulseRing::default()) },
@@ -111,4 +110,12 @@ const REGISTRY: &[Entry] = &[
     Entry { name: "interference",       desc: "Two-source wave interference",            factory: || Box::new(extras::Interference::default()) },
     Entry { name: "magnetic_field",     desc: "Field lines between two poles",           factory: || Box::new(extras::MagneticField::default()) },
     Entry { name: "predator_prey",      desc: "Lotka-Volterra population color swap",    factory: || Box::new(extras::PredatorPrey::new()) },
+    Entry { name: "nebula_drift",       desc: "Slow cinematic nebula clouds",            factory: || Box::new(extras::NebulaDrift::default()) },
+    Entry { name: "prism_bloom",        desc: "Soft prismatic blooms and fades",          factory: || Box::new(extras::PrismBloom::default()) },
+    Entry { name: "ember_drift",        desc: "Warm embers floating on smoky glow",       factory: || Box::new(extras::EmberDrift::default()) },
+    Entry { name: "ice_crystals",       desc: "Crystalline ice facets and shimmer",      factory: || Box::new(extras::IceCrystals::default()) },
+    Entry { name: "solar_flare",        desc: "Golden flare arcs from twin suns",         factory: || Box::new(extras::SolarFlare::default()) },
+    Entry { name: "moonlit_tide",       desc: "Blue moonlit tide with silver foam",       factory: || Box::new(extras::MoonlitTide::default()) },
+    Entry { name: "cyber_pulse",        desc: "Sleek teal/violet data pulses",            factory: || Box::new(extras::CyberPulse::default()) },
+    Entry { name: "jewel_box",          desc: "Gemstone facets rotating in velvet dark",  factory: || Box::new(extras::JewelBox::default()) },
 ];
