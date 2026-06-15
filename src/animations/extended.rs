@@ -1178,7 +1178,6 @@ impl Animation for ScannerSweep {
 
 struct ConfettiPiece {
     idx: usize,
-    #[allow(dead_code)]
     color: Rgb,
     life: i32,
 }
@@ -1197,6 +1196,8 @@ impl Animation for Confetti {
                 lcd.set_led(p.idx, false);
                 false
             } else {
+                let b = (p.life as f32 / 35.0).clamp(0.0, 1.0);
+                lcd.set_color(p.idx, color::scale(p.color, b));
                 true
             }
         });

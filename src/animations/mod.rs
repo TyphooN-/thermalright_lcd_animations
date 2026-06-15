@@ -118,4 +118,6 @@ const REGISTRY: &[Entry] = &[
     Entry { name: "moonlit_tide",       desc: "Blue moonlit tide with silver foam",       factory: || Box::new(extras::MoonlitTide::default()) },
     Entry { name: "cyber_pulse",        desc: "Sleek teal/violet data pulses",            factory: || Box::new(extras::CyberPulse::default()) },
     Entry { name: "jewel_box",          desc: "Gemstone facets rotating in velvet dark",  factory: || Box::new(extras::JewelBox::default()) },
+    Entry { name: "silk_drift",         desc: "Slow flowing silk-like pastel bands",   factory: || Box::new(extras::SilkDrift::default()) },
+    Entry { name: "crystal_shimmer",    desc: "Icy crystal facets with soft shimmers",   factory: || Box::new(extras::CrystalShimmer::default()) },
 ];

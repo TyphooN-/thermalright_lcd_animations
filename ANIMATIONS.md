@@ -1,6 +1,6 @@
-# Animation Catalog — 79 Curated Animations
+# Animation Catalog — 81 Curated Animations
 
-The catalog was tightened for aesthetics: harsh utility/status effects were removed from the public rotation set, several legacy effects were softened, and eight cinematic ambient animations were added.
+The catalog was tightened for aesthetics: harsh utility/status effects were removed from the public rotation set, several legacy effects were softened, eight cinematic ambient animations were added, and two additional silk/ice ambient flows were introduced.
 
 ## Retired from the public catalog
 
@@ -16,6 +16,8 @@ These were technically functional but not good-looking enough for daily rotation
 6. **moonlit_tide** — deep blue tide with bright foam highlights.
 7. **cyber_pulse** — teal/violet data pulses over a dim grid.
 8. **jewel_box** — gemstone facets rotating over a dark base.
+9. **silk_drift** — slow flowing low-saturation silk-like pastel color bands (22s dwell).
+10. **crystal_shimmer** — crystalline ice facets with soft high-power shimmers (16s dwell).
 
 ## Improved legacy effects
 
@@ -24,6 +26,7 @@ These were technically functional but not good-looking enough for daily rotation
 - **sparkle** is less noisy and longer-lived.
 - **color_shift** now has stable, softened bands instead of choosing random band widths every frame.
 - **ping_pong** and **mirror_bounce** now have trails, making them look intentional instead of like single diagnostic dots.
+- **confetti** now properly fades brightness over particle lifetime instead of abrupt on/off.
 
 ## Variable rotation timing
 
@@ -53,7 +56,6 @@ When `variable_rotation` is true, `rotation_duration` is only the fixed-mode fal
 ## Current catalog
 
 ### Waves
-
 - **rainbow_wave_ltr** — Rainbow wave moving left to right
 - **rainbow_wave_rtl** — Rainbow wave moving right to left
 - **dual_wave** — Dual rainbow waves on CPU and GPU sides
@@ -61,7 +63,6 @@ When `variable_rotation` is true, `rotation_duration` is only the fixed-mode fal
 - **fire_wave** — Smoother layered fire wave
 
 ### Scanners & chase
-
 - **knight_rider** — Classic K.I.T.T. scanner
 - **cylon_eye** — Battlestar-style scanner on both sides
 - **larson_scanner_dual** — Dual colored scanners
@@ -70,7 +71,6 @@ When `variable_rotation` is true, `rotation_duration` is only the fixed-mode fal
 - **lighthouse** — Rotating warm beacon
 
 ### Patterns, color and gradients
-
 - **checkerboard** — Animated checkerboard pattern
 - **alternating_bars** — Moving color bars
 - **spiral** — Spiral mathematical pattern
@@ -86,7 +86,6 @@ When `variable_rotation` is true, `rotation_duration` is only the fixed-mode fal
 - **color_shift** — Soft shifting color bands
 
 ### Nature and ambient
-
 - **aurora** — Aurora borealis
 - **lightning** — Lightning strike with afterglow
 - **fireflies** — Twinkling fireflies
@@ -98,70 +97,5 @@ When `variable_rotation` is true, `rotation_duration` is only the fixed-mode fal
 - **ice_crystals** — Crystalline ice shimmer
 - **solar_flare** — Golden flare arcs
 - **moonlit_tide** — Blue tide with silver foam
-- **jewel_box** — Gemstone facets
-
-### Particles & physics
-
-- **sparkle** — Random sparkle/twinkle
-- **random_burst** — Soft random color blooms
-- **matrix_rain** — Matrix-style green rain
-- **comet** — Comet with long trailing tail
-- **fireworks** — Explosion bursts
-- **meteor** — Meteor shower with trails
-- **snake** — Snake crawling through LEDs
-- **bouncing_ball** — Bouncing ball with physics
-- **ping_pong** — Traced ball bouncing between CPU/GPU sides
-- **bubbles** — Rising bubbles
-- **confetti** — Confetti burst
-- **random_walk** — Random-walk particles
-- **pulse_ring** — Expanding pulse rings
-
-### Audio-inspired
-
-- **vu_meter** — VU meter bars
-- **equalizer** — Multi-band equalizer
-- **drum_circle** — Polyrhythmic pulses
-
-### Retro & games
-
-- **pacman** — Pac-man chasing a colored ghost
-- **tetris_blocks** — Falling Tetris blocks
-
-### Display-like but still visual
-
-- **segment_crawl** — Crawl through all segments
-- **color_wipe** — Color wipe on/off
-- **scan_line** — Scanning line with trail
-- **dna_helix** — DNA double helix pattern
-- **binary_rain** — Binary rain columns
-- **cyber_pulse** — Sleek data pulses
-
-### Stars & space
-
-- **stars** — Twinkling stars
-- **warp_speed** — Star Trek warp effect
-- **starfield_warp** — 3D starfield warp
-- **wormhole** — Tunneling through colored rings
-
-### Advanced / scientific effects
-
-- **mirror_bounce** — Mirrored trails between sides
-- **ripple** — Water ripple from two sources
-- **rgb_windmills** — Rotating RGB windmills
-- **glitch** — Glitch/corruption effect
-- **scanner_sweep** — Multiple scanner beams
-- **perlin_field** — Smooth noise color field
-- **fluid_swirl** — Two-vortex fluid color advection
-- **game_of_life** — 1D cellular automaton
-- **ferrofluid** — Magnetic ferrofluid spikes
-- **color_volcano** — Eruption of colored particles
-- **double_pendulum** — Chaotic double-pendulum trace
-- **interference** — Two-source wave interference
-- **magnetic_field** — Dipole field between two poles
-- **predator_prey** — Lotka-Volterra population dynamics
-
-## Tips
-
-- Use variable rotation for unattended mode. Slow ambient animations need 14–18 seconds; scanners and simple loops are fine around 10 seconds.
-- Keep frame interval near 0.015s unless the hardware link is stable at faster rates.
-- If you want a calmer daily rotation, prioritize: `nebula_drift`, `prism_bloom`, `ember_drift`, `ice_crystals`, `moonlit_tide`, `aurora`, `lava_lamp`, `fluid_swirl`, `perlin_field`, `stars`.
+- **silk_drift** — Flowing silk pastel bands
+- **crystal_shimmer** — Icy facet shimmers

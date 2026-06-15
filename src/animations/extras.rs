@@ -894,3 +894,59 @@ impl Animation for JewelBox {
         14.0
     }
 }
+
+// ---------------------------------------------------------------------------
+// New ambient aesthetic additions
+// ---------------------------------------------------------------------------
+
+#[derive(Default)]
+pub struct SilkDrift {
+    frame: u32,
+}
+
+impl Animation for SilkDrift {
+    fn update(&mut self, lcd: &mut LcdController) {
+        lcd.set_all_leds(true);
+        let t = self.frame as f32 * 0.012;
+        for i in 0..NUMBER_OF_LEDS {
+            let x = i as f32 / NUMBER_OF_LEDS as f32;
+            let flow = (x * TAU * 1.2 + t).sin() * 0.5 + (x * TAU * 2.9 - t * 0.6).sin() * 0.3;
+            let hue = (210.0 + flow * 55.0 + (t * 4.0).sin() * 8.0).rem_euclid(360.0);
+            let sat = 0.35 + flow.abs() * 0.25;
+            let brightness = 0.12 + (flow * 0.5 + 0.5).powf(1.8) * 0.55;
+            lcd.set_color(i, color::hsv(hue, sat, brightness));
+        }
+        self.frame = self.frame.wrapping_add(1);
+    }
+
+    fn preferred_duration(&self) -> f32 {
+        22.0
+    }
+}
+
+#[derive(Default)]
+pub struct CrystalShimmer {
+    frame: u32,
+}
+
+impl Animation for CrystalShimmer {
+    fn update(&mut self, lcd: &mut LcdController) {
+        lcd.set_all_leds(true);
+        let t = self.frame as f32 * 0.009;
+        let pal = color::palette::ICE;
+        for i in 0..NUMBER_OF_LEDS {
+            let x = i as f32;
+            let facet = ((x * 0.29 + t * 1.3).sin() + (x * 0.71 - t * 0.9).cos()) * 0.5 + 0.5;
+            let idx = ((i / 7) + (self.frame as usize / 60)) % pal.len();
+            let shimmer = ((x * 3.7 + t * 7.2).sin() * 0.5 + 0.5).powf(12.0) * 0.7;
+            let b = (0.08 + facet * 0.22 + shimmer).clamp(0.06, 0.95);
+            let base = pal[idx];
+            lcd.set_color(i, color::scale(base, b));
+        }
+        self.frame = self.frame.wrapping_add(1);
+    }
+
+    fn preferred_duration(&self) -> f32 {
+        16.0
+    }
+}
