@@ -83,7 +83,9 @@
     "solar_flare",
     "moonlit_tide",
     "cyber_pulse",
-    "jewel_box"
+    "jewel_box",
+    "silk_drift",
+    "crystal_shimmer"
   ],
   "variable_rotation": true
 }
