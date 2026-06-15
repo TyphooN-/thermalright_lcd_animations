@@ -950,3 +950,96 @@ impl Animation for CrystalShimmer {
         16.0
     }
 }
+
+// ---------------------------------------------------------------------------
+// Three additional cinematic ambient animations (void, pollen, tidepool)
+// ---------------------------------------------------------------------------
+
+#[derive(Default)]
+pub struct VoidPulse {
+    frame: u32,
+}
+
+impl Animation for VoidPulse {
+    fn update(&mut self, lcd: &mut LcdController) {
+        lcd.set_all_leds(true);
+        let t = self.frame as f32 * 0.011;
+        for i in 0..NUMBER_OF_LEDS {
+            let x = i as f32 / NUMBER_OF_LEDS as f32;
+            let pulse = ((x * TAU * 0.8 + t).sin() * 0.6 + (x * TAU * 2.1 - t * 0.4).sin() * 0.4)
+                * 0.5
+                + 0.5;
+            let ring = ((x * TAU * 3.7 - t * 1.8).sin() * 0.5 + 0.5).powf(6.0);
+            let hue = 240.0 + pulse * 25.0;
+            let brightness = 0.03 + pulse * 0.09 + ring * 0.18;
+            lcd.set_color(i, color::hsv(hue, 0.75, brightness.clamp(0.02, 0.35)));
+        }
+        self.frame = self.frame.wrapping_add(1);
+    }
+
+    fn preferred_duration(&self) -> f32 {
+        20.0
+    }
+}
+
+#[derive(Default)]
+pub struct PollenDrift {
+    frame: u32,
+}
+
+impl Animation for PollenDrift {
+    fn update(&mut self, lcd: &mut LcdController) {
+        lcd.set_all_leds(true);
+        let t = self.frame as f32 * 0.007;
+        for i in 0..NUMBER_OF_LEDS {
+            let x = i as f32;
+            let drift = (x * 0.04 + t * 0.9).sin() * 0.5 + 0.5;
+            let mote =
+                ((x * 1.9 + t * 0.6).sin() * (x * 0.7 - t * 0.3).cos() * 0.5 + 0.5).powf(9.0);
+            let hue = 38.0 + drift * 12.0;
+            let b = 0.05 + mote * 0.22;
+            lcd.set_color(i, color::hsv(hue, 0.45, b.clamp(0.04, 0.28)));
+        }
+        if (self.frame % 7) == 0 {
+            let mut rng = rand::thread_rng();
+            let idx = rng.gen_range(0..NUMBER_OF_LEDS);
+            lcd.set_color(idx, color::scale(color::hex("#ffe4b5"), 0.6));
+        }
+        self.frame = self.frame.wrapping_add(1);
+    }
+
+    fn preferred_duration(&self) -> f32 {
+        16.0
+    }
+}
+
+#[derive(Default)]
+pub struct TidepoolCaustic {
+    frame: u32,
+}
+
+impl Animation for TidepoolCaustic {
+    fn update(&mut self, lcd: &mut LcdController) {
+        lcd.set_all_leds(true);
+        let t = self.frame as f32 * 0.014;
+        for i in 0..NUMBER_OF_LEDS {
+            let side = if i < 42 { 0 } else { 1 };
+            let x = (i % 42) as f32 / 42.0;
+            let pool = ((x * TAU * 1.1 + t * (0.6 + side as f32 * 0.1)).sin()
+                + (x * TAU * 2.8 - t * 0.9).sin() * 0.6)
+                * 0.5
+                + 0.5;
+            let caustic = ((x * TAU * 7.3 + t * 4.2).sin() * (x * TAU * 5.1 - t * 3.1).cos() * 0.5
+                + 0.5)
+                .powf(5.0);
+            let hue = 185.0 + pool * 18.0;
+            let brightness = 0.07 + pool * 0.18 + caustic * 0.25;
+            lcd.set_color(i, color::hsv(hue, 0.65, brightness.clamp(0.05, 0.55)));
+        }
+        self.frame = self.frame.wrapping_add(1);
+    }
+
+    fn preferred_duration(&self) -> f32 {
+        22.0
+    }
+}

@@ -85,7 +85,10 @@
     "cyber_pulse",
     "jewel_box",
     "silk_drift",
-    "crystal_shimmer"
+    "crystal_shimmer",
+    "void_pulse",
+    "pollen_drift",
+    "tidepool_caustic"
   ],
   "variable_rotation": true
 }

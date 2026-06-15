@@ -120,4 +120,7 @@ const REGISTRY: &[Entry] = &[
     Entry { name: "jewel_box",          desc: "Gemstone facets rotating in velvet dark",  factory: || Box::new(extras::JewelBox::default()) },
     Entry { name: "silk_drift",         desc: "Slow flowing silk-like pastel bands",   factory: || Box::new(extras::SilkDrift::default()) },
     Entry { name: "crystal_shimmer",    desc: "Icy crystal facets with soft shimmers",   factory: || Box::new(extras::CrystalShimmer::default()) },
+    Entry { name: "void_pulse",         desc: "Deep space breathing rings",            factory: || Box::new(extras::VoidPulse::default()) },
+    Entry { name: "pollen_drift",       desc: "Sparse warm pollen motes over cool field", factory: || Box::new(extras::PollenDrift::default()) },
+    Entry { name: "tidepool_caustic",   desc: "Two slow caustic tide pools",           factory: || Box::new(extras::TidepoolCaustic::default()) },
 ];
