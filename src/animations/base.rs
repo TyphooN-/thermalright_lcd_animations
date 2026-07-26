@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use rand::Rng;
+use rand::RngExt;
 
 use super::Animation;
 use crate::color::{self, palette, Rgb};
@@ -89,15 +89,15 @@ impl Animation for FireWave {
     fn update(&mut self, lcd: &mut LcdController) {
         lcd.set_all_leds(true);
         let pal = palette::FIRE;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let t = self.frame as f32 * 0.09;
         for i in 0..NUMBER_OF_LEDS {
             let x = i as f32;
             let flame = (x * 0.18 + t).sin() * 0.45
                 + (x * 0.41 - t * 1.6).sin() * 0.25
-                + rng.gen_range(-0.08..0.08);
-            let ember = if rng.gen::<f32>() < 0.025 {
-                rng.gen_range(0.15..0.35)
+                + rng.random_range(-0.08..0.08);
+            let ember = if rng.random::<f32>() < 0.025 {
+                rng.random_range(0.15..0.35)
             } else {
                 0.0
             };
@@ -270,8 +270,8 @@ impl Animation for Checkerboard {
     fn update(&mut self, lcd: &mut LcdController) {
         lcd.clear();
         let offset = ((self.frame / 10) % 2) as usize;
-        let c1 = color::wheel((self.frame * 2) as u32);
-        let c2 = color::wheel((self.frame * 2 + 128) as u32);
+        let c1 = color::wheel(self.frame * 2);
+        let c2 = color::wheel(self.frame * 2 + 128);
         for i in 0..NUMBER_OF_LEDS {
             lcd.set_led(i, true);
             lcd.set_color(i, if (i + offset) % 2 == 0 { c1 } else { c2 });
@@ -348,16 +348,20 @@ impl Animation for Sparkle {
             lcd.set_led(*idx, false);
         }
 
-        let mut rng = rand::thread_rng();
-        let num_new = if rng.gen::<f32>() < 0.22 {
-            rng.gen_range(1..=2)
+        let mut rng = rand::rng();
+        let num_new = if rng.random::<f32>() < 0.22 {
+            rng.random_range(1..=2)
         } else {
             0
         };
         for _ in 0..num_new {
-            let idx = rng.gen_range(0..NUMBER_OF_LEDS);
-            let c = color::hsv(rng.gen_range(0.0..360.0), rng.gen_range(0.8..1.0), 1.0);
-            let life = rng.gen_range(18..45);
+            let idx = rng.random_range(0..NUMBER_OF_LEDS);
+            let c = color::hsv(
+                rng.random_range(0.0..360.0),
+                rng.random_range(0.8..1.0),
+                1.0,
+            );
+            let life = rng.random_range(18..45);
             self.active.insert(idx, (c, life));
             lcd.set_led(idx, true);
             lcd.set_color(idx, c);
@@ -378,7 +382,7 @@ pub struct RandomBurst {
 }
 impl Animation for RandomBurst {
     fn update(&mut self, lcd: &mut LcdController) {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         lcd.set_all_leds(true);
         let base_hue = (self.frame as f32 * 0.35).rem_euclid(360.0);
         for i in 0..NUMBER_OF_LEDS {
@@ -386,9 +390,9 @@ impl Animation for RandomBurst {
             lcd.set_color(i, color::hsv(base_hue + i as f32 * 0.8, 0.55, 0.03 + wave));
         }
         if self.next_burst == 0 || self.frame >= self.next_burst {
-            let center = rng.gen_range(0..NUMBER_OF_LEDS) as i32;
-            let hue = rng.gen_range(0.0..360.0);
-            let radius = rng.gen_range(8..=18);
+            let center = rng.random_range(0..NUMBER_OF_LEDS) as i32;
+            let hue = rng.random_range(0.0..360.0);
+            let radius = rng.random_range(8..=18);
             for off in -radius..=radius {
                 let idx = center + off;
                 if (0..NUMBER_OF_LEDS as i32).contains(&idx) {
@@ -399,7 +403,7 @@ impl Animation for RandomBurst {
                     );
                 }
             }
-            self.next_burst = self.frame + rng.gen_range(22..=55);
+            self.next_burst = self.frame + rng.random_range(22..=55);
         }
         self.frame = self.frame.wrapping_add(1);
     }
@@ -447,11 +451,11 @@ pub struct Plasma {
 }
 impl Plasma {
     pub fn new() -> Self {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         Self {
             frame: 0,
-            offset: rng.gen_range(0.0..100.0),
-            speed_mult: rng.gen_range(0.8..1.2),
+            offset: rng.random_range(0.0..100.0),
+            speed_mult: rng.random_range(0.8..1.2),
         }
     }
 }
@@ -459,9 +463,9 @@ impl Animation for Plasma {
     fn update(&mut self, lcd: &mut LcdController) {
         lcd.set_all_leds(true);
         if self.frame > 0 && self.frame % 200 == 0 {
-            let mut rng = rand::thread_rng();
-            self.offset = rng.gen_range(0.0..100.0);
-            self.speed_mult = rng.gen_range(0.8..1.2);
+            let mut rng = rand::rng();
+            self.offset = rng.random_range(0.0..100.0);
+            self.speed_mult = rng.random_range(0.8..1.2);
         }
         let f = self.frame as f32;
         let sm = self.speed_mult;
@@ -491,13 +495,13 @@ pub struct MatrixRain {
 }
 impl MatrixRain {
     pub fn new() -> Self {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let drops = (0..12)
             .map(|_| MatrixDrop {
-                pos: rng.gen_range(0..NUMBER_OF_LEDS as i32) as f32,
-                speed: rng.gen_range(0.5..2.5),
-                length: rng.gen_range(5..=15),
-                hue: rng.gen_range(100..=140),
+                pos: rng.random_range(0..NUMBER_OF_LEDS as i32) as f32,
+                speed: rng.random_range(0.5..2.5),
+                length: rng.random_range(5..=15),
+                hue: rng.random_range(100..=140),
             })
             .collect();
         Self { frame: 0, drops }
@@ -506,20 +510,20 @@ impl MatrixRain {
 impl Animation for MatrixRain {
     fn update(&mut self, lcd: &mut LcdController) {
         lcd.clear();
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         for drop in &mut self.drops {
             drop.pos += drop.speed;
             if drop.pos > (NUMBER_OF_LEDS as f32 + drop.length as f32) {
                 drop.pos = -(drop.length as f32);
-                drop.speed = rng.gen_range(0.5..2.5);
-                drop.length = rng.gen_range(5..=15);
-                drop.hue = rng.gen_range(100..=140);
+                drop.speed = rng.random_range(0.5..2.5);
+                drop.length = rng.random_range(5..=15);
+                drop.hue = rng.random_range(100..=140);
             }
             for i in 0..drop.length {
                 let idx = drop.pos as i32 - i;
                 if (0..NUMBER_OF_LEDS as i32).contains(&idx) {
                     let b = 1.0 - (i as f32 / drop.length as f32);
-                    let hue = (drop.hue + rng.gen_range(-10..=10)).rem_euclid(360) as f32;
+                    let hue = (drop.hue + rng.random_range(-10..=10)).rem_euclid(360) as f32;
                     lcd.set_led(idx as usize, true);
                     lcd.set_color(idx as usize, color::hsv(hue, 1.0, b));
                 }

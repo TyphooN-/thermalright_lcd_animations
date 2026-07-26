@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use rand::Rng;
+use rand::RngExt;
 
 pub type Rgb = [u8; 3];
 
@@ -79,8 +79,8 @@ pub fn interpolate(c1: Rgb, c2: Rgb, t: f32) -> Rgb {
 
 #[inline]
 pub fn random_color() -> Rgb {
-    let mut r = rand::thread_rng();
-    [r.gen(), r.gen(), r.gen()]
+    let mut r = rand::rng();
+    [r.random(), r.random(), r.random()]
 }
 
 #[inline]

@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 use std::f32::consts::PI;
 
-use rand::seq::SliceRandom;
-use rand::Rng;
+use rand::prelude::IndexedRandom;
+use rand::RngExt;
 
 use super::Animation;
 use crate::color::{self, Rgb};
@@ -114,9 +114,9 @@ impl Animation for BouncingBall {
             self.velocity = -self.velocity;
         }
         if self.velocity.abs() < 0.5 {
-            let mut rng = rand::thread_rng();
-            self.position = rng.gen_range(0..(NUMBER_OF_LEDS - 20)) as f32;
-            self.velocity = rng.gen_range(1.5..3.0);
+            let mut rng = rand::rng();
+            self.position = rng.random_range(0..(NUMBER_OF_LEDS - 20)) as f32;
+            self.velocity = rng.random_range(1.5..3.0);
         }
         let size: i32 = 5;
         for i in 0..size {
@@ -182,7 +182,7 @@ impl Animation for Spiral {
         for i in 0..NUMBER_OF_LEDS {
             let angle = (i as f32 / NUMBER_OF_LEDS as f32) * 2.0 * PI;
             let offset = (angle * 3.0 + self.frame as f32 * 0.1).sin() * 0.5 + 0.5;
-            let hue = (offset * 360.0) as f32;
+            let hue = offset * 360.0;
             lcd.set_color(i, color::hsv(hue, 1.0, 1.0));
         }
         self.frame = self.frame.wrapping_add(1);
@@ -291,20 +291,20 @@ pub struct Lightning {
 }
 impl Lightning {
     pub fn new() -> Self {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         Self {
             frame: 0,
             strike_frame: 0,
-            next_strike: rng.gen_range(50..=150),
+            next_strike: rng.random_range(50..=150),
         }
     }
 }
 impl Animation for Lightning {
     fn update(&mut self, lcd: &mut LcdController) {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         if self.frame >= self.next_strike {
             self.strike_frame = self.frame;
-            self.next_strike = self.frame + rng.gen_range(50..=150);
+            self.next_strike = self.frame + rng.random_range(50..=150);
         }
         let age = self.frame - self.strike_frame;
         if age < 2 {
@@ -314,7 +314,7 @@ impl Animation for Lightning {
             lcd.set_all_leds(true);
             let b = 0.5 - (age - 2) as f32 * 0.15;
             lcd.set_all_colors(color::hsv(240.0, 0.3, b.max(0.0)));
-        } else if rng.gen::<f32>() < 0.05 {
+        } else if rng.random::<f32>() < 0.05 {
             lcd.set_all_leds(true);
             lcd.set_all_colors([0x1a, 0x1a, 0x2e]);
         } else {
@@ -363,9 +363,9 @@ impl Animation for Fireflies {
         for idx in to_remove {
             self.fireflies.remove(&idx);
         }
-        let mut rng = rand::thread_rng();
-        if rng.gen::<f32>() < 0.15 {
-            let idx = rng.gen_range(0..NUMBER_OF_LEDS);
+        let mut rng = rand::rng();
+        if rng.random::<f32>() < 0.15 {
+            let idx = rng.random_range(0..NUMBER_OF_LEDS);
             self.fireflies.insert(idx, 1.0);
         }
         self.frame = self.frame.wrapping_add(1);
@@ -423,7 +423,7 @@ impl Animation for Pacman {
             }
         }
         if (0..NUMBER_OF_LEDS as i32).contains(&self.ghost_pos) {
-            let c = color::wheel((self.frame * 5) as u32);
+            let c = color::wheel(self.frame * 5);
             lcd.set_led(self.ghost_pos as usize, true);
             lcd.set_color(self.ghost_pos as usize, c);
         }
@@ -445,12 +445,12 @@ pub struct TetrisBlocks {
 impl Animation for TetrisBlocks {
     fn update(&mut self, lcd: &mut LcdController) {
         lcd.clear();
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         if self.frame % 30 == 0 {
             self.blocks.push(TetrisBlock {
                 pos: 0.0,
-                color: color::wheel(rng.gen_range(0..=255)),
-                length: rng.gen_range(3..=6),
+                color: color::wheel(rng.random_range(0..=255)),
+                length: rng.random_range(3..=6),
             });
         }
         self.blocks.retain_mut(|b| {
@@ -518,11 +518,11 @@ pub struct Fireworks {
 impl Animation for Fireworks {
     fn update(&mut self, lcd: &mut LcdController) {
         lcd.clear();
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         if self.frame % 40 == 0 {
             self.explosions.push(Explosion {
-                center: rng.gen_range(10..(NUMBER_OF_LEDS as i32 - 10)),
-                color: color::wheel(rng.gen_range(0..=255)),
+                center: rng.random_range(10..(NUMBER_OF_LEDS as i32 - 10)),
+                color: color::wheel(rng.random_range(0..=255)),
                 age: 0,
             });
         }
@@ -697,11 +697,11 @@ pub struct Meteor {
 impl Animation for Meteor {
     fn update(&mut self, lcd: &mut LcdController) {
         lcd.clear();
-        let mut rng = rand::thread_rng();
-        if rng.gen::<f32>() < 0.1 {
+        let mut rng = rand::rng();
+        if rng.random::<f32>() < 0.1 {
             self.meteors.push(MeteorItem {
                 pos: 0.0,
-                speed: rng.gen_range(1.5..3.0),
+                speed: rng.random_range(1.5..3.0),
             });
         }
         self.meteors.retain_mut(|m| {
@@ -812,13 +812,13 @@ pub struct Bubbles {
 impl Animation for Bubbles {
     fn update(&mut self, lcd: &mut LcdController) {
         lcd.clear();
-        let mut rng = rand::thread_rng();
-        if rng.gen::<f32>() < 0.2 {
+        let mut rng = rand::rng();
+        if rng.random::<f32>() < 0.2 {
             self.bubbles.push(Bubble {
                 pos: (NUMBER_OF_LEDS - 1) as f32,
-                speed: rng.gen_range(0.3..1.2),
-                color: color::hsv(rng.gen_range(180.0..240.0), 0.7, 1.0),
-                size: rng.gen_range(2..=4),
+                speed: rng.random_range(0.3..1.2),
+                color: color::hsv(rng.random_range(180.0..240.0), 0.7, 1.0),
+                size: rng.random_range(2..=4),
             });
         }
         self.bubbles.retain_mut(|b| {
@@ -851,15 +851,15 @@ pub struct Stars {
 }
 impl Stars {
     pub fn new() -> Self {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let mut stars = HashMap::new();
         for _ in 0..15 {
-            let idx = rng.gen_range(0..NUMBER_OF_LEDS);
+            let idx = rng.random_range(0..NUMBER_OF_LEDS);
             stars.insert(
                 idx,
                 Star {
-                    brightness: rng.gen::<f32>(),
-                    speed: rng.gen_range(0.02..0.08),
+                    brightness: rng.random::<f32>(),
+                    speed: rng.random_range(0.02..0.08),
                     direction: *[1, -1].choose(&mut rng).unwrap(),
                 },
             );
@@ -870,14 +870,14 @@ impl Stars {
 impl Animation for Stars {
     fn update(&mut self, lcd: &mut LcdController) {
         lcd.clear();
-        let mut rng = rand::thread_rng();
-        if rng.gen::<f32>() < 0.05 && self.stars.len() < 20 {
-            let idx = rng.gen_range(0..NUMBER_OF_LEDS);
+        let mut rng = rand::rng();
+        if rng.random::<f32>() < 0.05 && self.stars.len() < 20 {
+            let idx = rng.random_range(0..NUMBER_OF_LEDS);
             self.stars.insert(
                 idx,
                 Star {
-                    brightness: rng.gen::<f32>(),
-                    speed: rng.gen_range(0.02..0.08),
+                    brightness: rng.random::<f32>(),
+                    speed: rng.random_range(0.02..0.08),
                     direction: *[1, -1].choose(&mut rng).unwrap(),
                 },
             );
@@ -912,7 +912,7 @@ pub struct WarpSpeed {
 impl Animation for WarpSpeed {
     fn update(&mut self, lcd: &mut LcdController) {
         lcd.clear();
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         if self.frame % 2 == 0 {
             self.stars.push(WarpStar {
                 pos: (NUMBER_OF_LEDS / 2) as f32,
@@ -926,7 +926,7 @@ impl Animation for WarpSpeed {
             if s.pos < 0.0 || s.pos >= NUMBER_OF_LEDS as f32 {
                 return false;
             }
-            let streak = (s.speed as i32).min(8).max(1);
+            let streak = (s.speed as i32).clamp(1, 8);
             for i in 0..streak {
                 let idx = s.pos as i32 - i * s.direction;
                 if (0..NUMBER_OF_LEDS as i32).contains(&idx) {
@@ -953,17 +953,17 @@ pub struct BinaryRain {
 }
 impl BinaryRain {
     pub fn new() -> Self {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let mut columns = Vec::new();
         let mut i = 0;
         while i < NUMBER_OF_LEDS {
             let mut bits = [0u8; 10];
             for b in &mut bits {
-                *b = rng.gen_range(0..=1);
+                *b = rng.random_range(0..=1);
             }
             columns.push(BinColumn {
-                pos: rng.gen_range(-20.0..0.0),
-                speed: rng.gen_range(0.5..1.5),
+                pos: rng.random_range(-20.0..0.0),
+                speed: rng.random_range(0.5..1.5),
                 bits,
             });
             i += 4;
@@ -974,13 +974,13 @@ impl BinaryRain {
 impl Animation for BinaryRain {
     fn update(&mut self, lcd: &mut LcdController) {
         lcd.clear();
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         for col in &mut self.columns {
             col.pos += col.speed;
             if col.pos > NUMBER_OF_LEDS as f32 + 10.0 {
                 col.pos = -10.0;
                 for b in &mut col.bits {
-                    *b = rng.gen_range(0..=1);
+                    *b = rng.random_range(0..=1);
                 }
             }
             for (i, &bit) in col.bits.iter().enumerate() {
@@ -1010,12 +1010,12 @@ pub struct PulseRing {
 impl Animation for PulseRing {
     fn update(&mut self, lcd: &mut LcdController) {
         lcd.clear();
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         if self.frame % 20 == 0 {
             self.rings.push(Ring {
                 center: NUMBER_OF_LEDS as i32 / 2,
                 radius: 0.0,
-                color: color::wheel(rng.gen_range(0..=255)),
+                color: color::wheel(rng.random_range(0..=255)),
             });
         }
         self.rings.retain_mut(|r| {
@@ -1070,11 +1070,11 @@ pub struct RandomWalk {
 }
 impl RandomWalk {
     pub fn new() -> Self {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let walkers = (0..8)
             .map(|_| Walker {
-                pos: rng.gen_range(0..NUMBER_OF_LEDS as i32),
-                hue: rng.gen_range(0..360),
+                pos: rng.random_range(0..NUMBER_OF_LEDS as i32),
+                hue: rng.random_range(0..360),
             })
             .collect();
         Self { frame: 0, walkers }
@@ -1083,10 +1083,10 @@ impl RandomWalk {
 impl Animation for RandomWalk {
     fn update(&mut self, lcd: &mut LcdController) {
         lcd.clear();
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         for w in &mut self.walkers {
-            w.pos = (w.pos + rng.gen_range(-2..=2)).rem_euclid(NUMBER_OF_LEDS as i32);
-            w.hue = (w.hue + rng.gen_range(-5..=5)).rem_euclid(360);
+            w.pos = (w.pos + rng.random_range(-2..=2)).rem_euclid(NUMBER_OF_LEDS as i32);
+            w.hue = (w.hue + rng.random_range(-5..=5)).rem_euclid(360);
             for i in 0..5 {
                 let idx = (w.pos - i).rem_euclid(NUMBER_OF_LEDS as i32) as usize;
                 let b = 1.0 - (i as f32 / 5.0);
@@ -1104,24 +1104,24 @@ pub struct Glitch {
 }
 impl Animation for Glitch {
     fn update(&mut self, lcd: &mut LcdController) {
-        let mut rng = rand::thread_rng();
-        if rng.gen::<f32>() < 0.1 {
+        let mut rng = rand::rng();
+        if rng.random::<f32>() < 0.1 {
             lcd.clear();
-            let n = rng.gen_range(20..=40);
+            let n = rng.random_range(20..=40);
             for _ in 0..n {
-                let idx = rng.gen_range(0..NUMBER_OF_LEDS);
-                let c = color::wheel(rng.gen_range(0..=255));
+                let idx = rng.random_range(0..NUMBER_OF_LEDS);
+                let c = color::wheel(rng.random_range(0..=255));
                 lcd.set_led(idx, true);
                 lcd.set_color(idx, c);
             }
         } else {
-            let n = rng.gen_range(2..=8);
+            let n = rng.random_range(2..=8);
             for _ in 0..n {
-                let idx = rng.gen_range(0..NUMBER_OF_LEDS);
-                if rng.gen::<f32>() < 0.5 {
+                let idx = rng.random_range(0..NUMBER_OF_LEDS);
+                if rng.random::<f32>() < 0.5 {
                     lcd.set_led(idx, false);
                 } else {
-                    let c = color::wheel(rng.gen_range(0..=255));
+                    let c = color::wheel(rng.random_range(0..=255));
                     lcd.set_led(idx, true);
                     lcd.set_color(idx, c);
                 }
@@ -1143,7 +1143,7 @@ pub struct ScannerSweep {
 }
 impl ScannerSweep {
     pub fn new() -> Self {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let scanners = (0..4)
             .map(|i| Scanner {
                 pos: (i * (NUMBER_OF_LEDS / 4)) as i32,
@@ -1189,7 +1189,7 @@ pub struct Confetti {
 }
 impl Animation for Confetti {
     fn update(&mut self, lcd: &mut LcdController) {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         self.pieces.retain_mut(|p| {
             p.life -= 1;
             if p.life <= 0 {
@@ -1201,12 +1201,12 @@ impl Animation for Confetti {
                 true
             }
         });
-        if rng.gen::<f32>() < 0.3 {
-            let n = rng.gen_range(3..=8);
+        if rng.random::<f32>() < 0.3 {
+            let n = rng.random_range(3..=8);
             for _ in 0..n {
-                let idx = rng.gen_range(0..NUMBER_OF_LEDS);
-                let c = color::wheel(rng.gen_range(0..=255));
-                let life = rng.gen_range(20..=40);
+                let idx = rng.random_range(0..NUMBER_OF_LEDS);
+                let c = color::wheel(rng.random_range(0..=255));
+                let life = rng.random_range(20..=40);
                 self.pieces.push(ConfettiPiece {
                     idx,
                     color: c,

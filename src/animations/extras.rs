@@ -1,6 +1,6 @@
 use std::f32::consts::{PI, TAU};
 
-use rand::Rng;
+use rand::RngExt;
 
 use super::Animation;
 use crate::color::{self, Rgb};
@@ -37,9 +37,9 @@ impl PerlinField {
 impl Animation for PerlinField {
     fn update(&mut self, lcd: &mut LcdController) {
         if !self.initialized {
-            let mut rng = rand::thread_rng();
+            let mut rng = rand::rng();
             for g in &mut self.gradients {
-                *g = rng.gen_range(0.0..1.0);
+                *g = rng.random_range(0.0..1.0);
             }
             self.initialized = true;
         }
@@ -101,9 +101,9 @@ pub struct GameOfLife {
 impl GameOfLife {
     pub fn new() -> Self {
         let mut state = [0u8; NUMBER_OF_LEDS];
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         for s in &mut state {
-            *s = rng.gen_range(0..=1);
+            *s = rng.random_range(0..=1);
         }
         Self {
             frame: 0,
@@ -128,8 +128,8 @@ impl Animation for GameOfLife {
             }
             // Occasional perturbation to keep things alive
             if self.frame % 240 == 0 {
-                let mut rng = rand::thread_rng();
-                let i = rng.gen_range(0..NUMBER_OF_LEDS);
+                let mut rng = rand::rng();
+                let i = rng.random_range(0..NUMBER_OF_LEDS);
                 self.next[i] ^= 1;
             }
             for i in 0..NUMBER_OF_LEDS {
@@ -154,9 +154,9 @@ impl Animation for GameOfLife {
     }
 
     fn reset(&mut self, lcd: &mut LcdController) {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         for s in &mut self.state {
-            *s = rng.gen_range(0..=1);
+            *s = rng.random_range(0..=1);
         }
         self.age = [0u8; NUMBER_OF_LEDS];
         lcd.clear();
@@ -174,12 +174,12 @@ pub struct Ferrofluid {
 
 impl Default for Ferrofluid {
     fn default() -> Self {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let mut spikes = [(0.0, 0.0, 0.0); 6];
         for (i, s) in spikes.iter_mut().enumerate() {
             s.0 = (i as f32 + 0.5) * (NUMBER_OF_LEDS as f32 / 6.0);
-            s.1 = rng.gen_range(0.0..TAU);
-            s.2 = rng.gen_range(0.0..360.0);
+            s.1 = rng.random_range(0.0..TAU);
+            s.2 = rng.random_range(0.0..360.0);
         }
         Self { frame: 0, spikes }
     }
@@ -233,17 +233,17 @@ pub struct ColorVolcano {
 impl Animation for ColorVolcano {
     fn update(&mut self, lcd: &mut LcdController) {
         lcd.clear();
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         // Erupt
         if self.frame % 6 == 0 {
-            let n = rng.gen_range(1..=3);
+            let n = rng.random_range(1..=3);
             let center = NUMBER_OF_LEDS as f32 / 2.0;
             for _ in 0..n {
                 self.particles.push(Particle {
-                    pos: center + rng.gen_range(-2.0..2.0),
-                    vel: rng.gen_range(-2.5..2.5),
-                    color: color::hsv(rng.gen_range(0.0..60.0), 1.0, 1.0),
-                    life: rng.gen_range(20..40),
+                    pos: center + rng.random_range(-2.0..2.0),
+                    vel: rng.random_range(-2.5..2.5),
+                    color: color::hsv(rng.random_range(0.0..60.0), 1.0, 1.0),
+                    life: rng.random_range(20..40),
                 });
             }
         }
@@ -389,12 +389,12 @@ pub struct StarfieldWarp {
 
 impl StarfieldWarp {
     pub fn new() -> Self {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let stars = (0..40)
             .map(|_| StarPoint {
-                angle: rng.gen_range(0.0..TAU),
-                z: rng.gen_range(0.1..1.0),
-                hue: rng.gen_range(0.0..360.0),
+                angle: rng.random_range(0.0..TAU),
+                z: rng.random_range(0.1..1.0),
+                hue: rng.random_range(0.0..360.0),
             })
             .collect();
         Self { frame: 0, stars }
@@ -404,13 +404,13 @@ impl StarfieldWarp {
 impl Animation for StarfieldWarp {
     fn update(&mut self, lcd: &mut LcdController) {
         lcd.clear();
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         for s in &mut self.stars {
             s.z -= 0.012;
             if s.z <= 0.02 {
-                s.angle = rng.gen_range(0.0..TAU);
+                s.angle = rng.random_range(0.0..TAU);
                 s.z = 1.0;
-                s.hue = rng.gen_range(0.0..360.0);
+                s.hue = rng.random_range(0.0..360.0);
             }
             let r = s.angle.cos();
             let projected = (NUMBER_OF_LEDS as f32 / 2.0) + r * (1.0 / s.z) * 8.0;
@@ -456,13 +456,13 @@ pub struct DrumCircle {
 
 impl DrumCircle {
     pub fn new() -> Self {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let drums = [7u32, 11, 13, 17, 23]
             .iter()
             .map(|&p| Drum {
                 period: p,
-                phase: rng.gen_range(0.0..1.0),
-                hue: rng.gen_range(0.0..360.0),
+                phase: rng.random_range(0.0..1.0),
+                hue: rng.random_range(0.0..360.0),
             })
             .collect();
         Self { frame: 0, drums }
@@ -708,19 +708,19 @@ pub struct EmberDrift {
 impl Animation for EmberDrift {
     fn update(&mut self, lcd: &mut LcdController) {
         lcd.set_all_leds(true);
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let t = self.frame as f32 * 0.025;
         for i in 0..NUMBER_OF_LEDS {
             let x = i as f32;
             let smoke = ((x * 0.13 + t).sin() * 0.5 + 0.5) * 0.08;
             lcd.set_color(i, color::hsv(22.0 + smoke * 80.0, 0.85, 0.03 + smoke));
         }
-        if rng.gen::<f32>() < 0.22 {
+        if rng.random::<f32>() < 0.22 {
             self.embers.push(Ember {
-                pos: rng.gen_range(0.0..NUMBER_OF_LEDS as f32),
-                vel: rng.gen_range(-0.42..0.42),
-                life: rng.gen_range(45.0..95.0),
-                hue: rng.gen_range(18.0..46.0),
+                pos: rng.random_range(0.0..NUMBER_OF_LEDS as f32),
+                vel: rng.random_range(-0.42..0.42),
+                life: rng.random_range(45.0..95.0),
+                hue: rng.random_range(18.0..46.0),
             });
         }
         self.embers.retain_mut(|e| {
@@ -1001,8 +1001,8 @@ impl Animation for PollenDrift {
             lcd.set_color(i, color::hsv(hue, 0.45, b.clamp(0.04, 0.28)));
         }
         if (self.frame % 7) == 0 {
-            let mut rng = rand::thread_rng();
-            let idx = rng.gen_range(0..NUMBER_OF_LEDS);
+            let mut rng = rand::rng();
+            let idx = rng.random_range(0..NUMBER_OF_LEDS);
             lcd.set_color(idx, color::scale(color::hex("#ffe4b5"), 0.6));
         }
         self.frame = self.frame.wrapping_add(1);

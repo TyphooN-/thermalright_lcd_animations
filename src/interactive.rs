@@ -8,7 +8,7 @@ use crossterm::terminal::{
     disable_raw_mode, enable_raw_mode, Clear, ClearType, EnterAlternateScreen, LeaveAlternateScreen,
 };
 use crossterm::{execute, queue};
-use rand::Rng;
+use rand::RngExt;
 
 use crate::animations::{self, Animation};
 use crate::lcd::LcdController;
@@ -63,8 +63,8 @@ impl InteractiveController {
     }
 
     fn random(&mut self) {
-        let mut rng = rand::thread_rng();
-        self.current_index = rng.gen_range(0..self.entries.len());
+        let mut rng = rand::rng();
+        self.current_index = rng.random_range(0..self.entries.len());
         self.load_current();
     }
 
@@ -200,10 +200,10 @@ impl InteractiveController {
                 }
             }
 
-            if self.random_mode {
-                if self.start_time.elapsed() >= Duration::from_secs_f32(self.duration) {
-                    self.random();
-                }
+            if self.random_mode
+                && self.start_time.elapsed() >= Duration::from_secs_f32(self.duration)
+            {
+                self.random();
             }
 
             if let Some(anim) = self.current_anim.as_mut() {
